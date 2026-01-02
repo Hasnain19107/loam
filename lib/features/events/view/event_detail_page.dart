@@ -1,89 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/loam_button.dart';
 import '../controller/event_detail_controller.dart';
 
-class EventDetailPage extends StatefulWidget {
+class EventDetailPage extends GetView<EventDetailController> {
   const EventDetailPage({super.key});
 
   @override
-  State<EventDetailPage> createState() => _EventDetailPageState();
-}
-
-class _EventDetailPageState extends State<EventDetailPage> {
-  bool _reportDialogOpen = false;
-
-  String _formatDate(DateTime date) {
-    return DateFormat('EEE, MMM d').format(date);
-  }
-
-  String _formatTime(DateTime date) {
-    return DateFormat('h:mm a').format(date);
-  }
-
-  Future<void> _handleShare(EventDetailController controller) async {
-    if (controller.event == null) return;
-    final shareText = '${controller.event!.name} - ${_formatDate(controller.event!.startDate)} at ${_formatTime(controller.event!.startDate)}';
-    
-    try {
-      await Share.share(shareText);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to share');
-    }
-  }
-
-  void _handleContact(EventDetailController controller) {
-    Get.snackbar('Info', 'Chat with organiser coming soon');
-  }
-
-  void _handleOpenInBrowser() {
-    Navigator.pop(context); // Close bottom sheet
-    Get.snackbar('Info', 'Opening in browser');
-  }
-
-  void _handleReportEvent(EventDetailController controller) {
-    Navigator.pop(context); // Close bottom sheet
-    setState(() {
-      _reportDialogOpen = true;
-    });
-  }
-
-  int? _getSpotsLeft(EventDetailController controller) {
-    final event = controller.event;
-    if (event == null || event.isUnlimitedCapacity) return null;
-    if (event.capacity == null) return null;
-    final participants = controller.participants.length;
-    final spots = (event.capacity! - participants);
-    return spots > 0 ? spots : 0;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final controller = Get.find<EventDetailController>();
-
-    // Show report dialog if needed
-    if (_reportDialogOpen && mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: context,
-          builder: (_) => _buildReportDialog(),
-        ).then((_) {
-          if (mounted) {
-            setState(() {
-              _reportDialogOpen = false;
-            });
-          }
-        });
-      });
-    }
+    // Show report dialog if controller triggers it
+    // Using ObxListener or simply letting controller handle showing is handled via callback below
+    // But since the controller logic handles "Action", we can just invoke it.
 
     return Obx(() {
       if (controller.showConfirmation) {
-        return _buildConfirmationScreen();
+        return _buildConfirmationScreen(context);
       }
 
       if (controller.isLoading || controller.event == null) {
@@ -94,11 +27,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
       }
 
       final event = controller.event!;
-      final displayDate = _formatDate(event.startDate);
-      final displayTime = _formatTime(event.startDate);
-      final spotsLeft = _getSpotsLeft(controller);
+      final displayDate = controller.formattedDate;
+      final displayTime = controller.formattedTime;
+      final spotsLeft = controller.spotsLeft;
       final isPast = controller.isPast;
-      final showStickyRegister = !isPast && !controller.isSignedUp && !controller.isRejected;
+      final showStickyRegister =
+          !isPast && !controller.isSignedUp && !controller.isRejected;
 
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -178,12 +112,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           children: [
                             Text(
                               event.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
                             Column(
@@ -209,7 +139,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               children: [
                                 _buildActionButton(
                                   icon: Icons.calendar_today,
-                                  label: _getButtonLabel(controller),
+                                  label: controller.getRegisterButtonText(),
                                   onPressed: controller.canRegister()
                                       ? () => controller.registerForEvent()
                                       : null,
@@ -220,7 +150,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 _buildActionButton(
                                   icon: Icons.share,
                                   label: 'Share',
-                                  onPressed: () => _handleShare(controller),
+                                  onPressed: () => controller.shareEvent(),
                                   isPrimary: false,
                                 ),
                                 const SizedBox(width: 8),
@@ -228,7 +158,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                   icon: Icons.chat_bubble_outline,
                                   label: 'Contact',
                                   onPressed: controller.isApproved
-                                      ? () => _handleContact(controller)
+                                      ? () => controller.contactOrganizer()
                                       : null,
                                   isPrimary: false,
                                   isDisabled: !controller.isApproved,
@@ -242,7 +172,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                       context: context,
                                       backgroundColor: Colors.transparent,
                                       isScrollControlled: true,
-                                      builder: (_) => _buildMoreSheet(controller),
+                                      builder: (_) =>
+                                          _buildMoreSheet(context, controller),
                                     );
                                   },
                                   isPrimary: false,
@@ -250,11 +181,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            if (spotsLeft != null && !isPast && !controller.isRejected)
+                            if (spotsLeft != null &&
+                                !isPast &&
+                                !controller.isRejected)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppColors.primary.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20),
@@ -305,14 +241,17 @@ class _EventDetailPageState extends State<EventDetailPage> {
                               ),
                               const SizedBox(height: 16),
                             ],
-                            if ((controller.isApproved || event.showParticipants) &&
+                            if ((controller.isApproved ||
+                                    event.showParticipants) &&
                                 controller.participants.isNotEmpty) ...[
                               Divider(color: AppColors.border),
                               const SizedBox(height: 24),
                               InkWell(
                                 onTap: () => Get.toNamed(
-                                  AppRoutes.eventParticipants
-                                      .replaceAll(':id', controller.eventId),
+                                  AppRoutes.eventParticipants.replaceAll(
+                                    ':id',
+                                    controller.eventId,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -340,8 +279,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                                 ),
                                                 child: CircleAvatar(
                                                   radius: 14,
-                                                  backgroundColor: AppColors.secondary,
-                                                  child: participant.photo != null
+                                                  backgroundColor:
+                                                      AppColors.secondary,
+                                                  child:
+                                                      participant.photo != null
                                                       ? ClipOval(
                                                           child: Image.network(
                                                             participant.photo!,
@@ -350,11 +291,15 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                                         )
                                                       : Text(
                                                           participant.firstName
-                                                                  ?.substring(0, 1)
+                                                                  ?.substring(
+                                                                    0,
+                                                                    1,
+                                                                  )
                                                                   .toUpperCase() ??
                                                               '?',
                                                           style: TextStyle(
-                                                            color: AppColors.primary,
+                                                            color: AppColors
+                                                                .primary,
                                                             fontSize: 12,
                                                           ),
                                                         ),
@@ -382,12 +327,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             const SizedBox(height: 24),
                             Text(
                               'About this gathering',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -401,7 +342,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                       ),
                     ),
-                      SizedBox(height: showStickyRegister ? 100 : 24),
+                    SizedBox(height: showStickyRegister ? 100 : 24),
                   ],
                 ),
               ],
@@ -413,13 +354,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.background.withOpacity(0.95),
-                  border: Border(
-                    top: BorderSide(color: AppColors.border),
-                  ),
+                  border: Border(top: BorderSide(color: AppColors.border)),
                 ),
                 child: SafeArea(
                   child: LoamButton(
-                    text: controller.isSubmitting ? 'Submitting...' : 'Register',
+                    text: controller.isSubmitting
+                        ? 'Submitting...'
+                        : 'Register',
                     onPressed: () => controller.registerForEvent(),
                     isLoading: controller.isSubmitting,
                   ),
@@ -428,14 +369,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
             : null,
       );
     });
-  }
-
-  String _getButtonLabel(EventDetailController controller) {
-    if (controller.isPast) return 'Ended';
-    if (controller.isRejected) return 'N/A';
-    if (controller.isApproved) return 'Joined';
-    if (controller.isSignedUp) return 'Pending';
-    return 'Register';
   }
 
   Widget _buildActionButton({
@@ -453,13 +386,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
           height: 56,
           decoration: BoxDecoration(
             color: isPrimary
-                ? (isDisabled
-                    ? AppColors.secondary
-                    : AppColors.primary)
+                ? (isDisabled ? AppColors.secondary : AppColors.primary)
                 : AppColors.background,
-            border: isPrimary
-                ? null
-                : Border.all(color: AppColors.border),
+            border: isPrimary ? null : Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -470,8 +399,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 size: 16,
                 color: isPrimary
                     ? (isDisabled
-                        ? AppColors.mutedForeground
-                        : AppColors.primaryForeground)
+                          ? AppColors.mutedForeground
+                          : AppColors.primaryForeground)
                     : AppColors.foreground,
               ),
               const SizedBox(height: 4),
@@ -482,8 +411,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   fontWeight: FontWeight.w500,
                   color: isPrimary
                       ? (isDisabled
-                          ? AppColors.mutedForeground
-                          : AppColors.primaryForeground)
+                            ? AppColors.mutedForeground
+                            : AppColors.primaryForeground)
                       : AppColors.foreground,
                   height: 1.2,
                 ),
@@ -498,7 +427,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
-  Widget _buildConfirmationScreen() {
+  Widget _buildConfirmationScreen(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -524,12 +453,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 const SizedBox(height: 24),
                 Text(
                   'Your registration has been received',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineMedium
-                      ?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -541,7 +467,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 const SizedBox(height: 32),
                 LoamButton(
                   text: 'Back to events',
-                  onPressed: () => Get.offAllNamed(AppRoutes.home),
+                  onPressed: () => controller.navigateToHome(),
                 ),
               ],
             ),
@@ -551,7 +477,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
-  Widget _buildMoreSheet(EventDetailController controller) {
+  Widget _buildMoreSheet(
+    BuildContext context,
+    EventDetailController controller,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -568,12 +497,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 children: [
                   Text(
                     'More options',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -587,7 +513,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 ListTile(
                   leading: const Icon(Icons.open_in_browser),
                   title: const Text('Open in browser'),
-                  onTap: _handleOpenInBrowser,
+                  onTap: () {
+                    Navigator.pop(context);
+                    controller.openInBrowser();
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.flag, color: Colors.red),
@@ -595,7 +524,11 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     'Report event',
                     style: TextStyle(color: Colors.red),
                   ),
-                  onTap: () => _handleReportEvent(controller),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Open dialog using controller stub but defining dialog here since it is UI
+                    Get.dialog(_buildReportDialog());
+                  },
                 ),
               ],
             ),
@@ -611,10 +544,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
       title: const Text('Thanks for letting us know'),
       content: const Text('Our team will review this event.'),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
-        ),
+        LoamButton(text: 'Done', onPressed: () => Get.toNamed(AppRoutes.main)),
       ],
     );
   }
@@ -624,10 +554,7 @@ class _EventDetailRow extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _EventDetailRow({
-    required this.icon,
-    required this.text,
-  });
+  const _EventDetailRow({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -635,10 +562,7 @@ class _EventDetailRow extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: AppColors.primary),
         const SizedBox(width: 12),
-        Text(
-          text,
-          style: TextStyle(color: AppColors.mutedForeground),
-        ),
+        Text(text, style: TextStyle(color: AppColors.mutedForeground)),
       ],
     );
   }

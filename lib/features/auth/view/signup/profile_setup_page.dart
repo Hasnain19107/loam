@@ -187,95 +187,111 @@ class ProfileSetupPage extends StatelessWidget {
     BuildContext context,
     AuthController authController,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "What's your date of birth?",
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "This helps us ensure Loam remains a safe, age-appropriate community.",
-          style: TextStyle(color: AppColors.mutedForeground),
-        ),
-        const Spacer(),
-        Obx(
-          () => BirthdatePicker(
-            value: authController.onboardingBirthdate,
-            onChange: authController.setOnboardingBirthdate,
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "What's your date of birth?",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "This helps us ensure Loam remains a safe, age-appropriate community.",
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+              const Spacer(),
+              Obx(
+                () => BirthdatePicker(
+                  value: authController.onboardingBirthdate,
+                  onChange: authController.setOnboardingBirthdate,
+                ),
+              ),
+              const Spacer(),
+            ],
           ),
         ),
-        const Spacer(),
       ],
     );
   }
 
   Widget _buildPhotoStep(BuildContext context, AuthController authController) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Add a profile photo",
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Upload your best photo",
-          style: TextStyle(color: AppColors.mutedForeground),
-        ),
-        const Spacer(),
-        Center(
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx(
-                () => GestureDetector(
-                  onTap: authController.handleOnboardingPhotoUpload,
-                  child: Container(
-                    width: 128,
-                    height: 128,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.border,
-                        width: 2,
-                        style: BorderStyle.solid,
+              Text(
+                "Add a profile photo",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Upload your best photo",
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+              const Spacer(),
+              Center(
+                child: Column(
+                  children: [
+                    Obx(
+                      () => GestureDetector(
+                        onTap: authController.handleOnboardingPhotoUpload,
+                        child: Container(
+                          width: 128,
+                          height: 128,
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 2,
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child:
+                              authController.onboardingPhotoUrl != null &&
+                                  authController.onboardingPhotoUrl!.isNotEmpty
+                              ? ClipOval(
+                                  child: _buildImageWidget(
+                                    authController.onboardingPhotoUrl!,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.camera_alt,
+                                  size: 32,
+                                  color: AppColors.mutedForeground,
+                                ),
+                        ),
                       ),
                     ),
-                    child:
-                        authController.onboardingPhotoUrl != null &&
-                            authController.onboardingPhotoUrl!.isNotEmpty
-                        ? ClipOval(
-                            child: _buildImageWidget(
-                              authController.onboardingPhotoUrl!,
-                            ),
-                          )
-                        : Icon(
-                            Icons.camera_alt,
-                            size: 32,
-                            color: AppColors.mutedForeground,
-                          ),
-                  ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: authController.handleOnboardingPhotoUpload,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                      ),
+                      child: const Text(
+                        'Upload photo',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: authController.handleOnboardingPhotoUpload,
-                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                child: const Text(
-                  'Upload photo',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
+              const Spacer(),
             ],
           ),
         ),
-        const Spacer(),
       ],
     );
   }
@@ -284,61 +300,68 @@ class ProfileSetupPage extends StatelessWidget {
     BuildContext context,
     AuthController authController,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Enable notifications",
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Get reminders for events and updates",
-          style: TextStyle(color: AppColors.mutedForeground),
-        ),
-        const SizedBox(height: 32),
-        Obx(
-          () => Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.popover,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Push notifications',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Stay updated on events',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Enable notifications",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                Switch(
-                  value: authController.onboardingNotifications,
-                  onChanged: authController.setOnboardingNotifications,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Get reminders for events and updates",
+                style: TextStyle(color: AppColors.mutedForeground),
+              ),
+              const SizedBox(height: 32),
+              Obx(
+                () => Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.popover,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Push notifications',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Stay updated on events',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: authController.onboardingNotifications,
+                        onChanged: authController.setOnboardingNotifications,
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+              const Spacer(),
+            ],
           ),
         ),
-        const Spacer(),
       ],
     );
   }

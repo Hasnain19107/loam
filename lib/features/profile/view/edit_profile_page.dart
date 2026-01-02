@@ -3,81 +3,14 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/loam_button.dart';
 import '../controller/profile_controller.dart';
-import '../../auth/controller/auth_controller.dart';
 
-class EditProfilePage extends StatefulWidget {
+class EditProfilePage extends GetView<ProfileController> {
   const EditProfilePage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
-}
-
-class _EditProfilePageState extends State<EditProfilePage> {
-  final _profileController = Get.find<ProfileController>();
-  final _authController = Get.find<AuthController>();
-
-  late TextEditingController _firstNameController;
-  late TextEditingController _phoneController;
-  late TextEditingController _workIndustryController;
-  late TextEditingController _countryOfBirthController;
-
-  String _relationshipStatus = 'single';
-  bool _hasChildren = false;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final profile = _authController.userProfile;
-    _firstNameController = TextEditingController(
-      text: profile?.firstName ?? '',
-    );
-    _phoneController = TextEditingController(
-      text: profile?.phone ?? '',
-    );
-    _workIndustryController = TextEditingController(
-      text: profile?.workIndustry ?? '',
-    );
-    _countryOfBirthController = TextEditingController(
-      text: profile?.countryOfBirth ?? '',
-    );
-    _relationshipStatus = profile?.relationshipStatus ?? 'single';
-    _hasChildren = profile?.hasChildren ?? false;
-  }
-
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _phoneController.dispose();
-    _workIndustryController.dispose();
-    _countryOfBirthController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleSave() async {
-    setState(() => _isSaving = true);
-
-    try {
-      await _profileController.updateProfile({
-        'first_name': _firstNameController.text.trim(),
-        'phone_number': _phoneController.text.trim(),
-        'relationship_status': _relationshipStatus,
-        'children': _hasChildren ? 'yes' : 'no',
-        'work_industry': _workIndustryController.text.trim(),
-        'country_of_birth': _countryOfBirthController.text.trim(),
-      });
-
-      Get.back();
-    } catch (e) {
-      // Error is handled by controller
-    } finally {
-      setState(() => _isSaving = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final profile = _authController.userProfile;
+    // Initialize controller state for this page
+    controller.initEditProfile();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -99,12 +32,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   Text(
                     'Edit profile',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -125,8 +55,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     child: Center(
                       child: Text(
-                        _firstNameController.text.isNotEmpty
-                            ? _firstNameController.text[0].toUpperCase()
+                        controller.firstNameController.text.isNotEmpty
+                            ? controller.firstNameController.text[0]
+                                  .toUpperCase()
                             : 'L',
                         style: TextStyle(
                           fontSize: 36,
@@ -172,7 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   // First name
                   _FormField(
                     label: 'First name',
-                    controller: _firstNameController,
+                    controller: controller.firstNameController,
                     placeholder: 'Your first name',
                   ),
                   const SizedBox(height: 24),
@@ -180,7 +111,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   // Phone number
                   _FormField(
                     label: 'Phone number',
-                    controller: _phoneController,
+                    controller: controller.phoneController,
                     placeholder: 'Your phone number',
                     keyboardType: TextInputType.phone,
                   ),
@@ -192,31 +123,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _relationshipStatus = 'single'),
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: _relationshipStatus == 'single'
-                                      ? AppColors.primary
-                                      : AppColors.border,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: _relationshipStatus == 'single'
-                                    ? AppColors.primary.withOpacity(0.05)
-                                    : Colors.transparent,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Single',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: _relationshipStatus == 'single'
+                          child: Obx(
+                            () => GestureDetector(
+                              onTap: () =>
+                                  controller.setRelationshipStatus('single'),
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        controller.relationshipStatus ==
+                                            'single'
                                         ? AppColors.primary
-                                        : AppColors.foreground,
+                                        : AppColors.border,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color:
+                                      controller.relationshipStatus == 'single'
+                                      ? AppColors.primary.withOpacity(0.05)
+                                      : Colors.transparent,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Single',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          controller.relationshipStatus ==
+                                              'single'
+                                          ? AppColors.primary
+                                          : AppColors.foreground,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -225,31 +163,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _relationshipStatus = 'attached'),
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: _relationshipStatus == 'attached'
-                                      ? AppColors.primary
-                                      : AppColors.border,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: _relationshipStatus == 'attached'
-                                    ? AppColors.primary.withOpacity(0.05)
-                                    : Colors.transparent,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Attached',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: _relationshipStatus == 'attached'
+                          child: Obx(
+                            () => GestureDetector(
+                              onTap: () =>
+                                  controller.setRelationshipStatus('attached'),
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        controller.relationshipStatus ==
+                                            'attached'
                                         ? AppColors.primary
-                                        : AppColors.foreground,
+                                        : AppColors.border,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color:
+                                      controller.relationshipStatus ==
+                                          'attached'
+                                      ? AppColors.primary.withOpacity(0.05)
+                                      : Colors.transparent,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Attached',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          controller.relationshipStatus ==
+                                              'attached'
+                                          ? AppColors.primary
+                                          : AppColors.foreground,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -267,30 +213,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _hasChildren = false),
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: !_hasChildren
-                                      ? AppColors.primary
-                                      : AppColors.border,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: !_hasChildren
-                                    ? AppColors.primary.withOpacity(0.05)
-                                    : Colors.transparent,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'No',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: !_hasChildren
+                          child: Obx(
+                            () => GestureDetector(
+                              onTap: () => controller.setHasChildren(false),
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: !controller.hasChildren
                                         ? AppColors.primary
-                                        : AppColors.foreground,
+                                        : AppColors.border,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: !controller.hasChildren
+                                      ? AppColors.primary.withOpacity(0.05)
+                                      : Colors.transparent,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'No',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: !controller.hasChildren
+                                          ? AppColors.primary
+                                          : AppColors.foreground,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -299,30 +247,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _hasChildren = true),
-                            child: Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: _hasChildren
-                                      ? AppColors.primary
-                                      : AppColors.border,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: _hasChildren
-                                    ? AppColors.primary.withOpacity(0.05)
-                                    : Colors.transparent,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Yes',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: _hasChildren
+                          child: Obx(
+                            () => GestureDetector(
+                              onTap: () => controller.setHasChildren(true),
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: controller.hasChildren
                                         ? AppColors.primary
-                                        : AppColors.foreground,
+                                        : AppColors.border,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: controller.hasChildren
+                                      ? AppColors.primary.withOpacity(0.05)
+                                      : Colors.transparent,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Yes',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: controller.hasChildren
+                                          ? AppColors.primary
+                                          : AppColors.foreground,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -337,7 +287,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   // Work industry
                   _FormField(
                     label: 'Work industry',
-                    controller: _workIndustryController,
+                    controller: controller.workIndustryController,
                     placeholder: 'e.g. Technology, Healthcare',
                   ),
                   const SizedBox(height: 24),
@@ -345,7 +295,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   // Country of birth
                   _FormField(
                     label: 'Country of birth',
-                    controller: _countryOfBirthController,
+                    controller: controller.countryOfBirthController,
                     placeholder: 'e.g. Singapore',
                   ),
                   const SizedBox(height: 24),
@@ -355,8 +305,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.lock_outline,
-                          size: 16, color: AppColors.mutedForeground),
+                      Icon(
+                        Icons.lock_outline,
+                        size: 16,
+                        color: AppColors.mutedForeground,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'These fields cannot be changed',
@@ -383,10 +336,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          profile?.dateOfBirth ?? 'Not set',
-                          style: TextStyle(
-                            color: AppColors.mutedForeground,
-                          ),
+                          controller.userProfile?.dateOfBirth ?? 'Not set',
+                          style: TextStyle(color: AppColors.mutedForeground),
                         ),
                       ),
                     ),
@@ -407,10 +358,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          (profile?.gender ?? 'Not set').toLowerCase(),
-                          style: TextStyle(
-                            color: AppColors.mutedForeground,
-                          ),
+                          (controller.userProfile?.gender ?? 'Not set')
+                              .toLowerCase(),
+                          style: TextStyle(color: AppColors.mutedForeground),
                         ),
                       ),
                     ),
@@ -418,10 +368,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 32),
 
                   // Save button
-                  LoamButton(
-                    text: 'Save changes',
-                    onPressed: _handleSave,
-                    isLoading: _isSaving,
+                  Obx(
+                    () => LoamButton(
+                      text: 'Save changes',
+                      onPressed: () => controller.saveProfile(),
+                      isLoading: controller.isLoading,
+                    ),
                   ),
                   const SizedBox(height: 40),
                 ],
@@ -467,9 +419,7 @@ class _FormField extends StatelessWidget {
             TextField(
               controller: controller,
               keyboardType: keyboardType,
-              decoration: InputDecoration(
-                hintText: placeholder,
-              ),
+              decoration: InputDecoration(hintText: placeholder),
             ),
       ],
     );

@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/network/remote/firebase_service.dart';
 import '../../../data/models/user_profile_model.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../auth/controller/auth_controller.dart';
 
 class ProfileController extends GetxController {
@@ -61,5 +63,72 @@ class ProfileController extends GetxController {
       _isLoading.value = false;
     }
   }
-}
 
+  // Edit Profile State
+  final firstNameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final workIndustryController = TextEditingController();
+  final countryOfBirthController = TextEditingController();
+  final RxString _relationshipStatus = 'single'.obs;
+  final RxBool _hasChildren = false.obs;
+
+  // Getters
+  bool get isAdmin => _authController.isAdmin;
+  String get relationshipStatus => _relationshipStatus.value;
+  bool get hasChildren => _hasChildren.value;
+
+  @override
+  void onClose() {
+    firstNameController.dispose();
+    phoneController.dispose();
+    workIndustryController.dispose();
+    countryOfBirthController.dispose();
+    super.onClose();
+  }
+
+  void initEditProfile() {
+    final profile = userProfile;
+    firstNameController.text = profile?.firstName ?? '';
+    phoneController.text = profile?.phone ?? '';
+    workIndustryController.text = profile?.workIndustry ?? '';
+    countryOfBirthController.text = profile?.countryOfBirth ?? '';
+    _relationshipStatus.value = profile?.relationshipStatus ?? 'single';
+    _hasChildren.value = profile?.hasChildren ?? false;
+  }
+
+  void setRelationshipStatus(String status) {
+    _relationshipStatus.value = status;
+  }
+
+  void setHasChildren(bool value) {
+    _hasChildren.value = value;
+  }
+
+  Future<void> saveProfile() async {
+    try {
+      await updateProfile({
+        'first_name': firstNameController.text.trim(),
+        'phone_number': phoneController.text.trim(),
+        'relationship_status': _relationshipStatus.value,
+        'children': _hasChildren.value ? 'yes' : 'no',
+        'work_industry': workIndustryController.text.trim(),
+        'country_of_birth': countryOfBirthController.text.trim(),
+      });
+      Get.back();
+    } catch (e) {
+      // Error handled in updateProfile
+    }
+  }
+
+  Future<void> signOut() async {
+    await _authController.signOut();
+  }
+
+  void navigateToAdminDashboard() {
+    Get.toNamed(AppRoutes.adminDashboard);
+  }
+
+  void navigateToAdminSettings() {
+    Get.toNamed(AppRoutes.adminSettings);
+  }
+}

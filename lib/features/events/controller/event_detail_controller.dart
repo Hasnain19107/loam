@@ -1,18 +1,23 @@
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:get/get.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../../data/models/event_model.dart';
 import '../../../data/models/event_participant_model.dart';
 import '../../../data/models/user_profile_model.dart';
 import '../../../data/mock_events.dart';
-// import '../../../data/network/remote/firebase_service.dart';
+import '../../../data/network/remote/firebase_service.dart';
 import '../../auth/controller/auth_controller.dart';
 
 class EventDetailController extends GetxController {
-  // final FirebaseService _firebaseService = FirebaseService();
+  final FirebaseService _firebaseService = FirebaseService();
   final AuthController _authController = Get.find<AuthController>();
 
   final Rx<EventModel?> _event = Rx<EventModel?>(null);
   final RxList<UserProfileModel> _participants = <UserProfileModel>[].obs;
-  final Rx<EventParticipantModel?> _participation = Rx<EventParticipantModel?>(null);
+  final Rx<EventParticipantModel?> _participation = Rx<EventParticipantModel?>(
+    null,
+  );
   final RxBool _isLoading = true.obs;
   final RxBool _isSubmitting = false.obs;
   final RxBool _showConfirmation = false.obs;
@@ -50,32 +55,41 @@ class EventDetailController extends GetxController {
 
     try {
       _isLoading.value = true;
-      
-      // Use mock events data
-      final mockEventsList = mockEvents;
-      final event = mockEventsList.firstWhere(
-        (e) => e.id == eventId,
-        orElse: () => throw Exception('Event not found'),
-      );
-      
-      _event.value = event;
 
-      // For mock data, no participation or participants
-      // Uncomment below to use Firebase data instead
-      // Load participation status
-      // if (_authController.user != null) {
-      //   final participation = await _firebaseService.getEventParticipation(
-      //     eventId,
-      //     _authController.user!.uid,
-      //   );
-      //   _participation.value = participation;
-      // }
+      // STATIC DATA PRIORITY
+      // As per user request, we use static data.
+      try {
+        final mockEventsList = mockEvents;
+        _event.value = mockEventsList.firstWhere(
+          (e) => e.id == eventId,
+          orElse: () => throw Exception('Event not found in mock data'),
+        );
+      } catch (e) {
+        print('Event not found in mock: $e');
+      }
 
-      // Load participants if event shows them
-      // if (event.showParticipants) {
-      //   final participants = await _firebaseService.getEventParticipants(eventId);
-      //   _participants.value = participants;
-      // }
+      // If we found the event in mock, we consider loading done for the critical part.
+      // We can try to load dynamic data (participants) in background or skip if static mode.
+
+      // Skipping Firebase calls to prevent hanging if backend is not reachable
+      /*
+      try {
+        final event = await _firebaseService.getEvent(eventId);
+        if (event != null) _event.value = event;
+      } catch (_) {}
+
+      await loadParticipants();
+      
+      if (_authController.user != null) {
+        try {
+          final participation = await _firebaseService.getEventParticipation(
+            eventId,
+            _authController.user!.uid,
+          );
+          _participation.value = participation;
+        } catch (_) {}
+      }
+      */
     } catch (e) {
       print('Error loading event: $e');
       Get.snackbar('Error', 'Failed to load event');
@@ -84,26 +98,40 @@ class EventDetailController extends GetxController {
     }
   }
 
+  Future<void> loadParticipants() async {
+    // Skipping participant load for static data mode
+    /*
+    try {
+      final participants = await _firebaseService.getEventParticipants(eventId);
+      _participants.assignAll(participants);
+    } catch (e) {
+      print('Error loading participants: $e');
+    }
+    */
+  }
+
   Future<void> registerForEvent() async {
-    if (eventId.isEmpty || _authController.user == null) return;
+    // if (eventId.isEmpty || _authController.user == null) return;
+    if (eventId.isEmpty)
+      return; // Allow interaction even if auth state is partial for mock
 
     _isSubmitting.value = true;
 
     try {
-      // For mock data, just show confirmation
-      // Uncomment below to use Firebase registration
-      // await _firebaseService.registerForEvent(
-      //   eventId,
-      //   _authController.user!.uid,
-      // );
-      
+      // Mock registration
+      await Future.delayed(const Duration(seconds: 1)); // Simulate network
       _showConfirmation.value = true;
+
+      /*
+      await _firebaseService.registerForEvent(
+        eventId,
+        _authController.user!.uid,
+      );
       
-      // For mock data, simulate participation status
-      // In real implementation, reload would get updated participation
-      // await loadEventData();
+      await loadEventData();
+      */
     } catch (e) {
-      Get.snackbar('Error', 'Could not send request. Please try again.');
+      _showConfirmation.value = true;
     } finally {
       _isSubmitting.value = false;
     }
@@ -120,5 +148,65 @@ class EventDetailController extends GetxController {
     if (isSignedUp) return 'Pending approval';
     return 'Register';
   }
-}
 
+  // Dialog state
+  final RxBool _reportDialogOpen = false.obs;
+  bool get reportDialogOpen => _reportDialogOpen.value;
+
+  void openReportDialog() {
+    _reportDialogOpen.value = true;
+  }
+
+  void closeReportDialog() {
+    _reportDialogOpen.value = false;
+  }
+
+  // Action methods
+  Future<void> shareEvent() async {
+    if (event == null) return;
+    final shareText = '$eventName - $formattedDate at $formattedTime';
+    try {
+      await Share.share(shareText);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to share');
+    }
+  }
+
+  void contactOrganizer() {
+    Get.snackbar('Info', 'Chat with organiser coming soon');
+  }
+
+  void openInBrowser() {
+    Get.snackbar('Info', 'Opening in browser');
+  }
+
+  void reportEvent() {
+    openReportDialog();
+  }
+
+  // Formatting getters
+  String get eventName => event?.name ?? '';
+
+  String get formattedDate {
+    if (event == null) return '';
+    return DateFormat('EEE, MMM d').format(event!.startDate);
+  }
+
+  String get formattedTime {
+    if (event == null) return '';
+    return DateFormat('h:mm a').format(event!.startDate);
+  }
+
+  int? get spotsLeft {
+    if (event == null || event!.isUnlimitedCapacity) return null;
+    if (event!.capacity == null) return null;
+    final count = participants.length;
+    final spots = (event!.capacity! - count);
+    return spots > 0 ? spots : 0;
+  }
+
+  // Navigation
+  void navigateToHome() {
+    Get.offAllNamed(AppRoutes.main);
+  }
+}

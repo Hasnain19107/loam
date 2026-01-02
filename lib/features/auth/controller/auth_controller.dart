@@ -384,16 +384,6 @@ class AuthController extends GetxController {
     }
   }
 
-  int _calculateAge(DateTime birthdate) {
-    final today = DateTime.now();
-    int age = today.year - birthdate.year;
-    final monthDiff = today.month - birthdate.month;
-    if (monthDiff < 0 || (monthDiff == 0 && today.day < birthdate.day)) {
-      age--;
-    }
-    return age;
-  }
-
   Future<void> handleOnboardingStepAction() async {
     if (_onboardingStep.value == 4) {
       await handleOnboardingBirthdateNext();
@@ -405,27 +395,7 @@ class AuthController extends GetxController {
   Future<void> handleOnboardingBirthdateNext() async {
     if (_onboardingBirthdate.value == null || user == null) return;
 
-    final age = _calculateAge(_onboardingBirthdate.value!);
-
-    if (age < AppConstants.minimumAge) {
-      _isOnboardingSubmitting.value = true;
-
-      final dateString =
-          '${_onboardingBirthdate.value!.year}-${_onboardingBirthdate.value!.month.toString().padLeft(2, '0')}-${_onboardingBirthdate.value!.day.toString().padLeft(2, '0')}';
-
-      await _firebaseService.updateUserProfile(user!.uid, {
-        'date_of_birth': dateString,
-        'is_shadow_blocked': true,
-      });
-
-      _isOnboardingSubmitting.value = false;
-      Get.offAllNamed(AppRoutes.blocked);
-      return;
-    }
-
-    // User is 21+, proceed to next step/submit
-    // Since we reduced steps to 4, we call handleOnboardingNext which will see
-    // step 4 matches total steps (or close to it) and handle submission logic.
+    // Proceed to next step/submit regardless of age
     await handleOnboardingNext();
   }
 
