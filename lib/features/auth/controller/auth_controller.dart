@@ -124,11 +124,6 @@ class AuthController extends GetxController {
         _userProfile.value = null;
         _isAdmin.value = false;
         _isSuperAdmin.value = false;
-        // Don't clear prefs here automatically, let signOut handle explicit clear
-        // or keep for offline support?
-        // Actually, if firebase auth state is null, we probably should clear or at least know we aren't auth'd remotely.
-        // But for "offline" feel, maybe keep it?
-        // User asked to "save user state as loged in", so we should ensure it's synced.
       }
     });
   }
@@ -278,6 +273,78 @@ class AuthController extends GetxController {
     _quizAnswers.value = answers;
   }
 
+  // Quiz state
+  final RxInt _quizStep = 0.obs;
+  final RxList<Map<String, dynamic>> _quizQuestions =
+      <Map<String, dynamic>>[].obs;
+  final RxMap<String, String> _quizAnswersMap = <String, String>{}.obs;
+  final RxnInt _quizScaleValue = RxnInt();
+  final RxBool _isQuizLoading = true.obs;
+
+  // Quiz getters
+  int get quizStep => _quizStep.value;
+  List<Map<String, dynamic>> get quizQuestions => _quizQuestions;
+  Map<String, String> get quizAnswersMap => _quizAnswersMap;
+  int? get quizScaleValue => _quizScaleValue.value;
+  bool get isQuizLoading => _isQuizLoading.value;
+
+  // Quiz methods
+  void setQuizLoading(bool loading) {
+    _isQuizLoading.value = loading;
+  }
+
+  void assignQuizQuestions(List<Map<String, dynamic>> questions) {
+    _quizQuestions.assignAll(questions);
+  }
+
+  void setQuizScaleValue(int? value) {
+    _quizScaleValue.value = value;
+  }
+
+  void handleQuizAnswer(String answer) {
+    final question = _quizQuestions[_quizStep.value];
+    _quizAnswersMap[question['id']] = answer;
+
+    if (_quizStep.value < _quizQuestions.length - 1) {
+      _quizStep.value++;
+      _quizScaleValue.value = null;
+    } else {
+      // Save answers and navigate
+      setQuizAnswers(Map<String, dynamic>.from(_quizAnswersMap));
+      Get.toNamed(AppRoutes.authChoice);
+    }
+  }
+
+  void handleQuizBack() {
+    if (_quizStep.value > 0) {
+      _quizStep.value--;
+
+      // Restore scale value if previous question was scale type
+      final prevQuestion = _quizQuestions[_quizStep.value];
+      if (_quizAnswersMap.containsKey(prevQuestion['id'])) {
+        if (prevQuestion['question_type'] == 'scale_1_10') {
+          _quizScaleValue.value = int.tryParse(
+            _quizAnswersMap[prevQuestion['id']] ?? '',
+          );
+        } else {
+          _quizScaleValue.value = null;
+        }
+      } else {
+        _quizScaleValue.value = null;
+      }
+    } else {
+      Get.back();
+    }
+  }
+
+  void resetQuiz() {
+    _quizStep.value = 0;
+    _quizAnswersMap.clear();
+    _quizScaleValue.value = null;
+    _isQuizLoading.value = true;
+    _quizQuestions.clear();
+  }
+
   bool canProceedOnboarding() {
     switch (_onboardingStep.value) {
       case 1:
@@ -356,8 +423,10 @@ class AuthController extends GetxController {
       return;
     }
 
-    // User is 21+, continue to next step immediately
-    _onboardingStep.value++;
+    // User is 21+, proceed to next step/submit
+    // Since we reduced steps to 4, we call handleOnboardingNext which will see
+    // step 4 matches total steps (or close to it) and handle submission logic.
+    await handleOnboardingNext();
   }
 
   Future<void> handleOnboardingNext() async {
