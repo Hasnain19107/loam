@@ -1,0 +1,477 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/loam_button.dart';
+import '../controller/profile_controller.dart';
+import '../../auth/controller/auth_controller.dart';
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final _profileController = Get.find<ProfileController>();
+  final _authController = Get.find<AuthController>();
+
+  late TextEditingController _firstNameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _workIndustryController;
+  late TextEditingController _countryOfBirthController;
+
+  String _relationshipStatus = 'single';
+  bool _hasChildren = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = _authController.userProfile;
+    _firstNameController = TextEditingController(
+      text: profile?.firstName ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: profile?.phone ?? '',
+    );
+    _workIndustryController = TextEditingController(
+      text: profile?.workIndustry ?? '',
+    );
+    _countryOfBirthController = TextEditingController(
+      text: profile?.countryOfBirth ?? '',
+    );
+    _relationshipStatus = profile?.relationshipStatus ?? 'single';
+    _hasChildren = profile?.hasChildren ?? false;
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _phoneController.dispose();
+    _workIndustryController.dispose();
+    _countryOfBirthController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSave() async {
+    setState(() => _isSaving = true);
+
+    try {
+      await _profileController.updateProfile({
+        'first_name': _firstNameController.text.trim(),
+        'phone_number': _phoneController.text.trim(),
+        'relationship_status': _relationshipStatus,
+        'children': _hasChildren ? 'yes' : 'no',
+        'work_industry': _workIndustryController.text.trim(),
+        'country_of_birth': _countryOfBirthController.text.trim(),
+      });
+
+      Get.back();
+    } catch (e) {
+      // Error is handled by controller
+    } finally {
+      setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = _authController.userProfile;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Get.back(),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shape: const CircleBorder(),
+                    ),
+                  ),
+                  Text(
+                    'Edit profile',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Profile photo
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        _firstNameController.text.isNotEmpty
+                            ? _firstNameController.text[0].toUpperCase()
+                            : 'L',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.camera_alt,
+                        size: 16,
+                        color: AppColors.background,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Form
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  // First name
+                  _FormField(
+                    label: 'First name',
+                    controller: _firstNameController,
+                    placeholder: 'Your first name',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Phone number
+                  _FormField(
+                    label: 'Phone number',
+                    controller: _phoneController,
+                    placeholder: 'Your phone number',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Relationship status
+                  _FormField(
+                    label: 'Relationship status',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _relationshipStatus = 'single'),
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: _relationshipStatus == 'single'
+                                      ? AppColors.primary
+                                      : AppColors.border,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: _relationshipStatus == 'single'
+                                    ? AppColors.primary.withOpacity(0.05)
+                                    : Colors.transparent,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Single',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: _relationshipStatus == 'single'
+                                        ? AppColors.primary
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _relationshipStatus = 'attached'),
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: _relationshipStatus == 'attached'
+                                      ? AppColors.primary
+                                      : AppColors.border,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: _relationshipStatus == 'attached'
+                                    ? AppColors.primary.withOpacity(0.05)
+                                    : Colors.transparent,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Attached',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: _relationshipStatus == 'attached'
+                                        ? AppColors.primary
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Children
+                  _FormField(
+                    label: 'Children',
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _hasChildren = false),
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: !_hasChildren
+                                      ? AppColors.primary
+                                      : AppColors.border,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: !_hasChildren
+                                    ? AppColors.primary.withOpacity(0.05)
+                                    : Colors.transparent,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'No',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: !_hasChildren
+                                        ? AppColors.primary
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _hasChildren = true),
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: _hasChildren
+                                      ? AppColors.primary
+                                      : AppColors.border,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: _hasChildren
+                                    ? AppColors.primary.withOpacity(0.05)
+                                    : Colors.transparent,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Yes',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: _hasChildren
+                                        ? AppColors.primary
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Work industry
+                  _FormField(
+                    label: 'Work industry',
+                    controller: _workIndustryController,
+                    placeholder: 'e.g. Technology, Healthcare',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Country of birth
+                  _FormField(
+                    label: 'Country of birth',
+                    controller: _countryOfBirthController,
+                    placeholder: 'e.g. Singapore',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Locked fields
+                  Divider(color: AppColors.border),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.lock_outline,
+                          size: 16, color: AppColors.mutedForeground),
+                      const SizedBox(width: 8),
+                      Text(
+                        'These fields cannot be changed',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Date of birth (locked)
+                  _FormField(
+                    label: 'Date of birth',
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border, width: 2),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          profile?.dateOfBirth ?? 'Not set',
+                          style: TextStyle(
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Gender (locked)
+                  _FormField(
+                    label: 'Gender',
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border, width: 2),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          (profile?.gender ?? 'Not set').toLowerCase(),
+                          style: TextStyle(
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Save button
+                  LoamButton(
+                    text: 'Save changes',
+                    onPressed: _handleSave,
+                    isLoading: _isSaving,
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FormField extends StatelessWidget {
+  final String label;
+  final TextEditingController? controller;
+  final String? placeholder;
+  final TextInputType? keyboardType;
+  final Widget? child;
+
+  const _FormField({
+    required this.label,
+    this.controller,
+    this.placeholder,
+    this.keyboardType,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.mutedForeground,
+          ),
+        ),
+        const SizedBox(height: 8),
+        child ??
+            TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              decoration: InputDecoration(
+                hintText: placeholder,
+              ),
+            ),
+      ],
+    );
+  }
+}
