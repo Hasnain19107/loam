@@ -20,7 +20,7 @@ class MainNavigationScreen extends StatelessWidget {
     final List<Widget> screens = [
       const HomePage(),
       const MyEventsPage(),
-      const MatchmakePage(),
+
       const ChatPage(),
       const ProfilePage(),
     ];
@@ -74,11 +74,7 @@ class MainNavigationScreen extends StatelessWidget {
                   activeIcon: Icon(Icons.event),
                   label: 'Events',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.people_outline),
-                  activeIcon: Icon(Icons.people),
-                  label: 'Matchmake',
-                ),
+
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat_bubble_outline),
                   activeIcon: Icon(Icons.chat_bubble),

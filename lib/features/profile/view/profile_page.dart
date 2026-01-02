@@ -5,7 +5,6 @@ import '../../../core/routes/app_routes.dart';
 
 import '../../../core/widgets/loam_card.dart';
 import '../controller/profile_controller.dart';
-import '../../auth/controller/auth_controller.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -13,7 +12,6 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileController = Get.find<ProfileController>();
-    final authController = Get.find<AuthController>();
 
     final settingsItems = [
       _SettingsItem(
@@ -24,13 +22,13 @@ class ProfilePage extends StatelessWidget {
       _SettingsItem(
         icon: Icons.language,
         label: 'App language',
-        value: authController.userProfile?.language ?? 'English',
+        value: profileController.userProfile?.language ?? 'English',
         route: AppRoutes.settingsLanguage,
       ),
       _SettingsItem(
         icon: Icons.location_on_outlined,
         label: 'City',
-        value: authController.userProfile?.city ?? 'Singapore',
+        value: profileController.userProfile?.city ?? 'Singapore',
         route: AppRoutes.settingsCity,
       ),
     ];
@@ -52,17 +50,19 @@ class ProfilePage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (authController.isAdmin)
+                  if (profileController.isAdmin)
                     PopupMenuButton(
                       icon: Icon(Icons.shield, color: AppColors.primary),
                       itemBuilder: (context) => [
                         PopupMenuItem(
                           child: const Text('Admin dashboard'),
-                          onTap: () => Get.toNamed(AppRoutes.adminDashboard),
+                          onTap: () =>
+                              profileController.navigateToAdminDashboard(),
                         ),
                         PopupMenuItem(
                           child: const Text('Admin & Team'),
-                          onTap: () => Get.toNamed(AppRoutes.adminSettings),
+                          onTap: () =>
+                              profileController.navigateToAdminSettings(),
                         ),
                       ],
                     ),
@@ -85,16 +85,16 @@ class ProfilePage extends StatelessWidget {
                         color: AppColors.secondary,
                         shape: BoxShape.circle,
                       ),
-                      child: authController.userProfile?.photo != null
+                      child: profileController.userProfile?.photo != null
                           ? ClipOval(
                               child: Image.network(
-                                authController.userProfile!.photo!,
+                                profileController.userProfile!.photo!,
                                 fit: BoxFit.cover,
                               ),
                             )
                           : Center(
                               child: Text(
-                                authController.userProfile?.firstName
+                                profileController.userProfile?.firstName
                                         ?.substring(0, 1)
                                         .toUpperCase() ??
                                     'L',
@@ -112,14 +112,14 @@ class ProfilePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            authController.userProfile?.firstName ??
+                            profileController.userProfile?.firstName ??
                                 'Loam User',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            authController.userProfile?.phone ??
+                            profileController.userProfile?.phone ??
                                 'No phone added',
                             style: TextStyle(
                               fontSize: 14,
@@ -231,7 +231,7 @@ class ProfilePage extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 backgroundColor: AppColors.popover,
                 onTap: () async {
-                  await authController.signOut();
+                  await profileController.signOut();
                 },
                 child: Row(
                   children: [
