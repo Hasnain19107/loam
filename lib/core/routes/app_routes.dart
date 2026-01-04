@@ -5,6 +5,7 @@ class AppRoutes {
   static const String authChoice = '/auth-choice';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String forgotPassword = '/forgot-password';
   static const String onboarding = '/onboarding';
 
   // Protected Routes
@@ -46,21 +47,4 @@ class AppRoutes {
 
   // Fallback
   static const String notFound = '/not-found';
-
-  // Helper methods
-  static String eventDetailPath(String eventId) => '/event/$eventId';
-  static String eventParticipantsPath(String eventId) =>
-      '/event/$eventId/participants';
-  static String adminEventDetailPath(String eventId) =>
-      '/admin/events/$eventId';
-  static String adminEventEditPath(String eventId) =>
-      '/admin/events/$eventId/edit';
-  static String adminEventRequestsPath(String eventId) =>
-      '/admin/events/$eventId/requests';
-  static String adminQuizQuestionsPath(String quizId) =>
-      '/admin/quiz-builder/$quizId';
-  static String adminMatchmakerQuestionsPath(String setId) =>
-      '/admin/matchmaker-builder/$setId';
-  static String adminMatchmakingDetailPath(String userId) =>
-      '/admin/matchmaking/$userId';
 }

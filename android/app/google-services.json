@@ -1,26 +1,387 @@
 {
   "project_info": {
-    "project_number": "129581089311",
-    "project_id": "clara-b9264",
-    "storage_bucket": "clara-b9264.firebasestorage.app"
+    "project_number": "3582513409",
+    "project_id": "besto-ai",
+    "storage_bucket": "besto-ai.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:129581089311:android:abf531f505b52c6e4d4b2a",
+        "mobilesdk_app_id": "1:3582513409:android:c84284feb940f595450b00",
         "android_client_info": {
-          "package_name": "com.example.loam"
+          "package_name": "com.bestoai.clara"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "3582513409-1nhduq9ohu6v6bka53nf31mdq5u1go4o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bestoai.clara",
+            "certificate_hash": "06001963cc8f6babd7e28a15f52a87a255e066d3"
+          }
+        },
+        {
+          "client_id": "3582513409-tvn855efl6h495brbovtp1b5rb6o44jr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bestoai.clara",
+            "certificate_hash": "e7d1765a212ca845fbdbef2e7c539bb77cb501a5"
+          }
+        },
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBgsAoWs5UJZO7QpmhpPeOhqZ_7NGRHBog"
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:a5fc01cfa0b1c2ee450b00",
+        "android_client_info": {
+          "package_name": "com.bestobusiness.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:ab284f84779db7c2450b00",
+        "android_client_info": {
+          "package_name": "com.bestoo.customer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-0paq3vg9nqlecs4mau658aok1v3u80ob.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bestoo.customer",
+            "certificate_hash": "b3ad1b339aa23769aa638879dc779015f6c92d8b"
+          }
+        },
+        {
+          "client_id": "3582513409-153rjv4ujvlnh99kq6m2ss476uhq2hf6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bestoo.customer",
+            "certificate_hash": "9ff16dea351002c951fb02794ca6218bd48a7064"
+          }
+        },
+        {
+          "client_id": "3582513409-sg9uf0hou6v69g8tm7fpi40vu6c9tdi7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bestoo.customer",
+            "certificate_hash": "28c5510d1d9fb75bd658086bb623b695a4a0c55c"
+          }
+        },
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:6d798bb7553edb78450b00",
+        "android_client_info": {
+          "package_name": "com.bestoo.customer.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:f2aff49401c32cb6450b00",
+        "android_client_info": {
+          "package_name": "com.bestoobusiness.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:c3afeea5cb04f84b450b00",
+        "android_client_info": {
+          "package_name": "com.bestopartner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:9f0a8ca63ad37232450b00",
+        "android_client_info": {
+          "package_name": "com.bestopartner.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:fcaacd2fca9f7c9f450b00",
+        "android_client_info": {
+          "package_name": "com.example.loam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-hqbok5rftrpqm3t3bgirk7cbrihb15hb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.loam",
+            "certificate_hash": "06001963cc8f6babd7e28a15f52a87a255e066d3"
+          }
+        },
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3582513409:android:8c846215d9ed1b71450b00",
+        "android_client_info": {
+          "package_name": "com.ws.tellmews"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "3582513409-pmddh7cp13mogdlgjj7i16rka896a0ji.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ws.tellmews",
+            "certificate_hash": "5f3824d3e0b25f180f0b523631017592eca56523"
+          }
+        },
+        {
+          "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3vmYq-Wp5kNNTswnS0EzUXc2VqvI2gik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "3582513409-ijtuj0rugocqjb37gg1rvnnqjso438ot.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.loam"
+              }
+            }
+          ]
         }
       }
     }

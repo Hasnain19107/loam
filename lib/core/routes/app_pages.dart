@@ -1,52 +1,48 @@
 import 'package:get/get.dart';
-import '../../features/auth/view/landing_page.dart';
-import '../../features/bottom_navigation/view/main_navigation.dart';
-import '../../features/bottom_navigation/controller/main_navigation_controller.dart';
-import '../../features/auth/view/signup/quiz_page.dart';
-import '../../features/auth/view/signup/auth_choice_page.dart';
-import '../../features/auth/view/login_page.dart';
-import '../../features/auth/view/signup/signup_page.dart';
-import '../../features/auth/view/signup/profile_setup_page.dart';
-import '../../features/home/view/home_page.dart';
-import '../../features/home/controller/home_controller.dart';
-import '../../features/chat/view/chat_page.dart';
-import '../../features/chat/controller/chat_controller.dart';
-import '../../features/events/view/my_events_page.dart';
-import '../../features/profile/view/profile_page.dart';
-import '../../features/profile/controller/profile_controller.dart';
-import '../../features/profile/view/edit_profile_page.dart';
-import '../../features/events/view/event_detail_page.dart';
-import '../../features/events/controller/event_detail_controller.dart';
-import '../../features/events/view/event_participants_page.dart';
-import '../../features/events/controller/events_controller.dart';
-import '../../features/matchmake/view/matchmake_page.dart';
-import '../../features/matchmake/controller/matchmake_controller.dart';
-import '../../features/matchmake/view/matchmake_chat_page.dart';
-import '../../features/settings/view/notification_settings_page.dart';
-import '../../features/settings/controller/settings_controller.dart';
-import '../../features/settings/view/language_settings_page.dart';
-import '../../features/settings/view/city_settings_page.dart';
-import '../../features/auth/view/blocked_screen_page.dart';
-import '../../features/common/view/not_found_page.dart';
-import '../../features/admin/view/admin_login_page.dart';
-import '../../features/admin/controller/admin_controller.dart';
-import '../../features/admin/view/admin_dashboard_page.dart';
-import '../../features/admin/view/admin_users_page.dart';
-import '../../features/admin/view/admin_events_page.dart';
-import '../../features/admin/view/admin_event_create_page.dart';
-import '../../features/admin/view/admin_event_detail_page.dart';
-import '../../features/admin/view/admin_event_edit_page.dart';
-import '../../features/admin/view/admin_requests_page.dart';
-import '../../features/admin/view/admin_event_requests_page.dart';
-import '../../features/admin/view/admin_settings_page.dart';
-import '../../features/admin/view/admin_quiz_builder_page.dart';
-import '../../features/admin/view/admin_quiz_questions_page.dart';
-import '../../features/admin/view/admin_quiz_responses_page.dart';
-import '../../features/admin/view/admin_matchmaker_builder_page.dart';
-import '../../features/admin/view/admin_matchmaker_questions_page.dart';
-import '../../features/admin/view/admin_matchmaker_responses_page.dart';
-import '../../features/admin/view/admin_matchmaking_page.dart';
-import '../../features/admin/view/admin_matchmaking_detail_page.dart';
+import 'package:loam/features/user/chat/controller/chat_controller.dart';
+import 'package:loam/features/user/chat/view/chat_page.dart';
+import '../../features/user/auth/view/landing_page.dart';
+import '../../features/user/bottom_navigation/view/main_navigation.dart';
+import '../../features/user/bottom_navigation/controller/main_navigation_controller.dart';
+import '../../features/user/auth/view/signup/quiz_page.dart';
+import '../../features/user/auth/view/signup/auth_choice_page.dart';
+import '../../features/user/auth/view/login_page.dart';
+import '../../features/user/auth/view/forgot_password_page.dart';
+import '../../features/user/auth/view/signup/signup_page.dart';
+import '../../features/user/auth/view/signup/profile_setup_page.dart';
+import '../../features/user/home/view/home_page.dart';
+import '../../features/user/home/controller/home_controller.dart';
+import '../../features/user/events/view/my_events_page.dart';
+import '../../features/user/profile/view/profile_page.dart';
+import '../../features/user/profile/controller/profile_controller.dart';
+import '../../features/user/profile/view/edit_profile_page.dart';
+import '../../features/user/events/view/event_detail_page.dart';
+import '../../features/user/events/controller/event_detail_controller.dart';
+import '../../features/user/events/view/event_participants_page.dart';
+import '../../features/user/events/controller/events_controller.dart';
+import '../../features/user/matchmake/view/matchmake_page.dart';
+import '../../features/user/matchmake/controller/matchmake_controller.dart';
+import '../../features/user/matchmake/view/matchmake_chat_page.dart';
+import '../../features/user/settings/view/notification_settings_page.dart';
+import '../../features/user/settings/controller/settings_controller.dart';
+import '../../features/user/settings/view/language_settings_page.dart';
+import '../../features/user/settings/view/city_settings_page.dart';
+import '../../features/user/auth/view/blocked_screen_page.dart';
+import '../../features/user/common/view/not_found_page.dart';
+import '../../features/admin/dashboard/controller/admin_controller.dart';
+import '../../features/admin/dashboard/view/admin_dashboard_page.dart';
+import '../../features/admin/dashboard/view/admin_users_page.dart';
+import '../../features/admin/events/view/admin_events_page.dart';
+import '../../features/admin/events/view/admin_event_create_page.dart';
+import '../../features/admin/events/view/admin_event_detail_page.dart';
+
+import '../../features/admin/events/view/admin_requests_page.dart';
+import '../../features/admin/events/view/admin_event_requests_page.dart';
+import '../../features/admin/dashboard/view/admin_settings_page.dart';
+import '../../features/admin/quize/view/admin_quiz_builder_page.dart';
+import '../../features/admin/quize/view/admin_quiz_questions_page.dart';
+import '../../features/admin/quize/view/admin_quiz_responses_page.dart';
+
 import 'app_routes.dart';
 
 class AppPages {
@@ -58,6 +54,10 @@ class AppPages {
     GetPage(name: AppRoutes.quiz, page: () => const QuizPage()),
     GetPage(name: AppRoutes.authChoice, page: () => const AuthChoicePage()),
     GetPage(name: AppRoutes.login, page: () => const LoginPage()),
+    GetPage(
+      name: AppRoutes.forgotPassword,
+      page: () => const ForgotPasswordPage(),
+    ),
     GetPage(name: AppRoutes.signup, page: () => const SignupPage()),
     GetPage(name: AppRoutes.onboarding, page: () => const ProfileSetupPage()),
 
@@ -166,13 +166,6 @@ class AppPages {
 
     // Admin Routes
     GetPage(
-      name: AppRoutes.adminLogin,
-      page: () => const AdminLoginPage(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<AdminController>(() => AdminController());
-      }),
-    ),
-    GetPage(
       name: AppRoutes.adminDashboard,
       page: () => const AdminDashboardPage(),
       binding: BindingsBuilder(() {
@@ -189,10 +182,7 @@ class AppPages {
       name: AppRoutes.adminEventDetail,
       page: () => const AdminEventDetailPage(),
     ),
-    GetPage(
-      name: AppRoutes.adminEventEdit,
-      page: () => const AdminEventEditPage(),
-    ),
+
     GetPage(
       name: AppRoutes.adminRequests,
       page: () => const AdminRequestsPage(),
@@ -216,26 +206,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.adminQuizResponses,
       page: () => const AdminQuizResponsesPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminMatchmakerBuilder,
-      page: () => const AdminMatchmakerBuilderPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminMatchmakerQuestions,
-      page: () => const AdminMatchmakerQuestionsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminMatchmakerResponses,
-      page: () => const AdminMatchmakerResponsesPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminMatchmaking,
-      page: () => const AdminMatchmakingPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminMatchmakingDetail,
-      page: () => const AdminMatchmakingDetailPage(),
     ),
 
     // Fallback

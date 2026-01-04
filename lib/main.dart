@@ -4,8 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/constants/app_theme.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
+import 'features/user/auth/controller/auth_controller.dart';
 import 'data/network/local/preferences/shared_preference.dart';
-import 'features/auth/controller/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,20 +14,21 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    // Firebase not configured - app will work but Firebase features won't
     debugPrint('Firebase initialization error: $e');
-    debugPrint('Please add google-services.json to android/app/');
   }
 
-  // Initialize GetX controllers
-  Get.put(AuthController(), permanent: true);
-
-  // Check auth state
+  // Initialize Shared Preferences
   final prefs = SharedPreferenceService();
   await prefs.init();
-  final String initialRoute = prefs.isLoggedIn
-      ? AppRoutes.main
-      : AppRoutes.landing;
+
+  // Initialize Auth Controller
+  Get.put(AuthController(), permanent: true);
+
+  // Determine initial route
+  String initialRoute = AppRoutes.landing;
+  if (prefs.isLoggedIn) {
+     initialRoute = prefs.isAdmin ? AppRoutes.adminDashboard : AppRoutes.main;
+  }
 
   runApp(MyApp(initialRoute: initialRoute));
 }
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Loam',
+      title: 'Loam Admin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: initialRoute,

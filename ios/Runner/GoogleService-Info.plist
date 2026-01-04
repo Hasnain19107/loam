@@ -2,18 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>3582513409-35hn0uhrtp65cc90adleqstq5jth6okb.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.3582513409-35hn0uhrtp65cc90adleqstq5jth6okb</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>3582513409-0paq3vg9nqlecs4mau658aok1v3u80ob.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyBOsFxZc-_Y8nfxw7PiOfHXEDdG4I3Bdww</string>
+	<string>AIzaSyD4PyU38vCuJMZp_d9lW5er8oDv5j2rGqg</string>
 	<key>GCM_SENDER_ID</key>
-	<string>129581089311</string>
+	<string>3582513409</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.loam</string>
 	<key>PROJECT_ID</key>
-	<string>clara-b9264</string>
+	<string>besto-ai</string>
 	<key>STORAGE_BUCKET</key>
-	<string>clara-b9264.firebasestorage.app</string>
+	<string>besto-ai.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:129581089311:ios:953d3d1dab8df3584d4b2a</string>
+	<string>1:3582513409:ios:08ce9564a0bbf1d4450b00</string>
 </dict>
 </plist>
