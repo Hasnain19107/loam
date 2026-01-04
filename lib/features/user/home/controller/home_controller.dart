@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 import '../../events/controller/events_controller.dart';
 
 class HomeController extends GetxController {

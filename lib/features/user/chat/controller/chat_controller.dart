@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 
 class ChatController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import '../../../../data/network/remote/firebase_service.dart';
-import '../../../../data/models/survey_question_model.dart';
-import '../../../../core/routes/app_routes.dart';
+import '../../../data/network/remote/firebase_service.dart';
+import '../../../data/models/survey_question_model.dart';
+import '../../../core/routes/app_routes.dart';
 import 'auth_controller.dart';
 
 class QuizController extends GetxController {

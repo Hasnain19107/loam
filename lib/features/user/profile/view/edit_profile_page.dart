@@ -353,44 +353,25 @@ class EditProfilePage extends GetView<ProfileController> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Gender (locked - from quiz answers)
-                  FutureBuilder<String?>(
-                    future: controller.getGenderFromQuiz(),
-                    builder: (context, snapshot) {
-                      String genderText = 'Not set';
-                      if (snapshot.hasData && snapshot.data != null) {
-                        genderText = snapshot.data!.toLowerCase();
-                      } else if (controller.userProfile?.gender != null) {
-                        // Fallback to profile gender if quiz answer not available
-                        genderText = controller.userProfile!.gender!.toLowerCase();
-                      }
-                      
-                      return _FormField(
-                        label: 'Gender',
-                        child: Container(
-                          height: 56,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border, width: 2),
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: snapshot.connectionState == ConnectionState.waiting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : Text(
-                                    genderText,
-                                    style: TextStyle(color: AppColors.mutedForeground),
-                                  ),
-                          ),
+                  // Gender
+                  _FormField(
+                    label: 'Gender',
+                    child: Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.border, width: 2),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          controller.userProfile?.gender ?? 'Not set',
+                          style: TextStyle(color: AppColors.mutedForeground),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 32),
 

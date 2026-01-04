@@ -6,18 +6,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:loam/data/models/survey_question_model.dart';
 import 'package:loam/data/models/survey_response_model.dart';
 
-import '../../../../data/network/remote/firebase_service.dart';
-import '../../../../data/models/user_profile_model.dart';
-import '../../../../core/routes/app_routes.dart';
-import '../../../../core/constants/country_codes.dart';
-import '../../../../data/network/local/preferences/shared_preference.dart';
+import '../../../data/network/remote/firebase_service.dart';
+import '../../../data/models/user_profile_model.dart';
+import '../../../core/routes/app_routes.dart';
+import '../../../core/constants/country_codes.dart';
+import '../../../data/network/local/preferences/shared_preference.dart';
 
 class AuthController extends GetxController {
   final FirebaseService _firebaseService = FirebaseService();
   final SharedPreferenceService _prefsService = SharedPreferenceService();
   final _picker = ImagePicker();
 
-  // Auth observables
+
   final Rx<firebase_auth.User?> _user = Rx<firebase_auth.User?>(null);
   final Rx<UserProfileModel?> _userProfile = Rx<UserProfileModel?>(null);
   final RxBool _isLoading = false.obs;
@@ -33,7 +33,7 @@ class AuthController extends GetxController {
 
   // Onboarding state
   final RxInt _onboardingStep = 1.obs;
-  final int _totalOnboardingSteps = 6;
+  final int _totalOnboardingSteps = 7;
   final RxString _onboardingPhone = ''.obs;
   final Rx<CountryCode> _onboardingCountryCode = defaultCountry.obs;
   final TextEditingController onboardingFirstNameController =
@@ -47,6 +47,7 @@ class AuthController extends GetxController {
   final Rx<DateTime?> _onboardingBirthdate = Rx<DateTime?>(null);
   final Rxn<String> _onboardingPhotoUrl = Rxn<String>();
   final RxString _onboardingPhotoLocalPath = ''.obs;
+  final RxString _onboardingGender = ''.obs;
   final RxBool _onboardingNotifications = true.obs;
   final RxBool _isOnboardingSubmitting = false.obs;
   final RxBool _isUploadingPhoto = false.obs;
@@ -76,6 +77,7 @@ class AuthController extends GetxController {
   DateTime? get onboardingBirthdate => _onboardingBirthdate.value;
   String? get onboardingPhotoUrl => _onboardingPhotoUrl.value;
   String get onboardingPhotoLocalPath => _onboardingPhotoLocalPath.value;
+  String get onboardingGender => _onboardingGender.value;
   bool get onboardingNotifications => _onboardingNotifications.value;
   bool get isOnboardingSubmitting => _isOnboardingSubmitting.value;
   bool get isUploadingPhoto => _isUploadingPhoto.value;
@@ -665,6 +667,10 @@ class AuthController extends GetxController {
     _onboardingNotifications.value = value;
   }
 
+  void setOnboardingGender(String gender) {
+    _onboardingGender.value = gender;
+  }
+
   void setQuizAnswers(
     Map<String, dynamic> answers,
     List<SurveyQuestionModel> questions,
@@ -689,7 +695,9 @@ class AuthController extends GetxController {
       case 4:
         return _onboardingBirthdate.value != null;
       case 5:
+        return _onboardingGender.value.isNotEmpty;
       case 6:
+      case 7:
         return true;
       default:
         return false;
@@ -699,13 +707,14 @@ class AuthController extends GetxController {
   String getOnboardingButtonText() {
     switch (_onboardingStep.value) {
       case 4:
-        return 'Continue';
       case 5:
+        return 'Continue';
+      case 6:
         return _onboardingPhotoUrl.value != null &&
                 _onboardingPhotoUrl.value!.isNotEmpty
             ? 'Next'
             : 'Skip for now';
-      case 6:
+      case 7:
         if (_isOnboardingSubmitting.value) {
           return 'Saving...';
         }
@@ -755,6 +764,7 @@ class AuthController extends GetxController {
           'last_name': onboardingLastNameController.text.trim(),
           'phone_number': fullPhone,
           'date_of_birth': dateString,
+          'gender': _onboardingGender.value,
           'notifications_enabled': _onboardingNotifications.value,
           if (_onboardingPhotoUrl.value != null &&
               _onboardingPhotoUrl.value!.isNotEmpty)
@@ -822,13 +832,13 @@ class AuthController extends GetxController {
     onboardingLastNameController.clear();
     onboardingPhoneController.clear();
     _onboardingBirthdate.value = null;
+    _onboardingGender.value = '';
     _onboardingPhotoUrl.value = null;
     _onboardingPhotoLocalPath.value = '';
     _onboardingNotifications.value = true;
     _isOnboardingSubmitting.value = false;
     _isUploadingPhoto.value = false;
-    // Don't clear quiz answers in resetOnboarding - they should persist until saved to Firebase
-    // Quiz answers are cleared only after successful save or when explicitly needed
+    
   }
 
   bool isBlocked() {
@@ -838,19 +848,17 @@ class AuthController extends GetxController {
   bool isOnboardingComplete() {
     final profile = _userProfile.value;
     if (profile == null) return false;
-    // Check if user has completed all onboarding steps:
-    // Step 1: Phone number
-    // Step 2: First name
-    // Step 3: Last name (optional, but we check if onboarding was completed)
-    // Step 4: Date of birth
-    // Step 5: Photo (optional - not required)
-    // Step 6: Notifications (always set, defaults to true)
+   
     return profile.firstName != null &&
         profile.firstName!.isNotEmpty &&
         profile.phone != null &&
         profile.phone!.isNotEmpty &&
         profile.dateOfBirth != null &&
         profile.dateOfBirth!.isNotEmpty &&
+        profile.dateOfBirth != null &&
+        profile.dateOfBirth!.isNotEmpty &&
+        profile.gender != null &&
+        profile.gender!.isNotEmpty &&
         profile.notificationsEnabled != null;
   }
 }
