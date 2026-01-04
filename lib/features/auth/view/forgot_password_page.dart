@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/loam_button.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/loam_button.dart';
 import '../controller/auth_controller.dart';
 
 class ForgotPasswordPage extends StatelessWidget {

@@ -4,8 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/constants/app_theme.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
-import 'features/user/auth/controller/auth_controller.dart';
+import 'features/auth/controller/auth_controller.dart';
 import 'data/network/local/preferences/shared_preference.dart';
+
+import 'data/models/user_profile_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,10 +29,32 @@ void main() async {
   // Determine initial route
   String initialRoute = AppRoutes.landing;
   if (prefs.isLoggedIn) {
-     initialRoute = prefs.isAdmin ? AppRoutes.adminDashboard : AppRoutes.main;
+     if (prefs.isAdmin) {
+       initialRoute = AppRoutes.adminDashboard;
+     } else {
+       // Check if profile is complete
+       final user = prefs.getUser();
+       if (isProfileComplete(user)) {
+         initialRoute = AppRoutes.main;
+       } else {
+         initialRoute = AppRoutes.onboarding;
+       }
+     }
   }
 
   runApp(MyApp(initialRoute: initialRoute));
+}
+
+bool isProfileComplete(UserProfileModel? user) {
+  if (user == null) return false;
+  return user.firstName != null &&
+      user.firstName!.isNotEmpty &&
+      user.phone != null &&
+      user.phone!.isNotEmpty &&
+      user.dateOfBirth != null &&
+      user.dateOfBirth!.isNotEmpty &&
+      user.gender != null &&
+      user.gender!.isNotEmpty;
 }
 
 class MyApp extends StatelessWidget {

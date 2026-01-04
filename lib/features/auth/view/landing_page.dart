@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/routes/app_routes.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/routes/app_routes.dart';
 import '../controller/auth_controller.dart';
 
 class LandingPage extends StatelessWidget {

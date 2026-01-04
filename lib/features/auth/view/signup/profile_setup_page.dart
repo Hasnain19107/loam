@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/widgets/loam_button.dart';
-import '../../../../../core/widgets/country_code_select.dart';
-import '../../../../../core/widgets/birthdate_picker.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/loam_button.dart';
+import '../../../../core/widgets/country_code_select.dart';
+import '../../../../core/widgets/birthdate_picker.dart';
 import '../../controller/auth_controller.dart';
 
 class ProfileSetupPage extends StatelessWidget {
@@ -82,8 +82,10 @@ class ProfileSetupPage extends StatelessWidget {
       case 4:
         return _buildBirthdateStep(context, authController);
       case 5:
-        return _buildPhotoStep(context, authController);
+        return _buildGenderStep(context, authController);
       case 6:
+        return _buildPhotoStep(context, authController);
+      case 7:
         return _buildNotificationsStep(context, authController);
       default:
         return const SizedBox();
@@ -217,6 +219,85 @@ class ProfileSetupPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGenderStep(
+    BuildContext context,
+    AuthController authController,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "What is your gender?",
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "This helps us create a better experience for you.",
+          style: TextStyle(color: AppColors.mutedForeground),
+        ),
+        const SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: Obx(
+                () => _buildGenderButton(
+                  context,
+                  'Male',
+                  authController.onboardingGender == 'Male',
+                  () => authController.setOnboardingGender('Male'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Obx(
+                () => _buildGenderButton(
+                  context,
+                  'Female',
+                  authController.onboardingGender == 'Female',
+                  () => authController.setOnboardingGender('Female'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenderButton(
+    BuildContext context,
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.foreground,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+      ),
     );
   }
 

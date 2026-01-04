@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../data/network/remote/firebase_service.dart';
 import '../../../../data/models/user_profile_model.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 
 enum MatchmakeState { notStarted, submitted, matched }
 

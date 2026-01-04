@@ -7,7 +7,7 @@ import '../../../../data/models/event_participant_model.dart';
 import '../../../../data/models/user_profile_model.dart';
 
 import '../../../../data/network/remote/firebase_service.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 
 class EventDetailController extends GetxController {
   final FirebaseService _firebaseService = FirebaseService();

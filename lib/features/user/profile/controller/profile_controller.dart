@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../data/network/remote/firebase_service.dart';
 import '../../../../data/models/user_profile_model.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 import '../../bottom_navigation/controller/main_navigation_controller.dart';
 
 class ProfileController extends GetxController {
@@ -93,10 +93,12 @@ class ProfileController extends GetxController {
   final countryOfBirthController = TextEditingController();
   final RxString _relationshipStatus = 'single'.obs;
   final RxBool _hasChildren = false.obs;
+  final RxString _gender = ''.obs;
 
   // Getters
   String get relationshipStatus => _relationshipStatus.value;
   bool get hasChildren => _hasChildren.value;
+  String get gender => _gender.value;
 
   @override
   void onClose() {
@@ -115,6 +117,7 @@ class ProfileController extends GetxController {
     countryOfBirthController.text = profile?.countryOfBirth ?? '';
     _relationshipStatus.value = profile?.relationshipStatus ?? 'single';
     _hasChildren.value = profile?.hasChildren ?? false;
+    _gender.value = profile?.gender ?? '';
   }
 
   void setRelationshipStatus(String status) {
@@ -125,6 +128,10 @@ class ProfileController extends GetxController {
     _hasChildren.value = value;
   }
 
+  void setGender(String value) {
+    _gender.value = value;
+  }
+
   Future<void> saveProfile() async {
     try {
       await updateProfile({
@@ -132,6 +139,7 @@ class ProfileController extends GetxController {
         'phone_number': phoneController.text.trim(),
         'relationship_status': _relationshipStatus.value,
         'children': _hasChildren.value ? 'yes' : 'no',
+        'gender': _gender.value,
         'work_industry': workIndustryController.text.trim(),
         'country_of_birth': countryOfBirthController.text.trim(),
       });

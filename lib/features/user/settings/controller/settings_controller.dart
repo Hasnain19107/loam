@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../data/network/remote/firebase_service.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 
 class SettingsController extends GetxController {
   final FirebaseService _firebaseService = FirebaseService();

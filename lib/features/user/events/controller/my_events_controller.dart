@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import '../../../../data/models/event_model.dart';
 import '../../../../data/network/remote/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../auth/controller/auth_controller.dart';
+import '../../../auth/controller/auth_controller.dart';
 
 class MyEventItem {
   final EventModel event;
