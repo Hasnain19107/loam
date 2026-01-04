@@ -28,6 +28,13 @@ class SharedPreferenceService {
   }
 
   bool get isLoggedIn => _prefs?.getBool(_isLoggedInKey) ?? false;
+  
+  static const String _isAdminKey = 'is_admin';
+  Future<void> setIsAdmin(bool isAdmin) async {
+    await _prefs?.setBool(_isAdminKey, isAdmin);
+  }
+  
+  bool get isAdmin => _prefs?.getBool(_isAdminKey) ?? false;
 
   // User Profile
   Future<void> saveUser(UserProfileModel user) async {
