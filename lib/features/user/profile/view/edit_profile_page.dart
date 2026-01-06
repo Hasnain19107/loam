@@ -10,8 +10,12 @@ class EditProfilePage extends GetView<ProfileController> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize controller state for this page
-    controller.initEditProfile();
+    // Initialize controller state for this page (only once)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!controller.isEditProfileInitialized) {
+        controller.initEditProfile();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -469,11 +473,16 @@ class _FormField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         child ??
-            TextField(
-              controller: controller,
-              keyboardType: keyboardType,
-              decoration: InputDecoration(hintText: placeholder),
-            ),
+            (controller != null
+                ? TextField(
+                    controller: controller,
+                    keyboardType: keyboardType,
+                    decoration: InputDecoration(hintText: placeholder),
+                  )
+                : TextField(
+                    keyboardType: keyboardType,
+                    decoration: InputDecoration(hintText: placeholder),
+                  )),
       ],
     );
   }

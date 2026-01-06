@@ -6,6 +6,7 @@ import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
 import 'features/auth/controller/auth_controller.dart';
 import 'data/network/local/preferences/shared_preference.dart';
+import 'data/network/remote/app_settings_service.dart';
 
 import 'data/models/user_profile_model.dart';
 
@@ -25,6 +26,9 @@ void main() async {
 
   // Initialize Auth Controller
   Get.put(AuthController(), permanent: true);
+
+  // Initialize App Settings Service (for app-wide settings like quiz onboarding)
+  Get.put(AppSettingsService(), permanent: true);
 
   // Determine initial route
   String initialRoute = AppRoutes.landing;
@@ -70,9 +74,6 @@ class MyApp extends StatelessWidget {
       initialRoute: initialRoute,
       getPages: AppPages.routes,
 
-      // Use default transition to avoid animation initialization issues
-      // defaultTransition: Transition.fade,
-      // transitionDuration: const Duration(milliseconds: 300),
     );
   }
 }

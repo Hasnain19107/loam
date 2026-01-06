@@ -23,12 +23,18 @@ class SignupPage extends StatelessWidget {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Form(
                       key: formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Back button
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Get.back(),
+                            color: AppColors.foreground.withOpacity(0.7),
+                          ),
                           const SizedBox(height: 32),
 
                           // Title
@@ -58,6 +64,13 @@ class SignupPage extends StatelessWidget {
                                   hintText: 'Email',
                                 ),
                                 validator: authController.validateEmail,
+                                onChanged: (_) {
+                                  // Trigger validation when email changes
+                                  if (formKey.currentState != null) {
+                                    formKey.currentState!.validate();
+                                  }
+                                },
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -70,6 +83,32 @@ class SignupPage extends StatelessWidget {
                                 ),
                                 validator: (value) => authController
                                     .validatePassword(value, isSignup: true),
+                                onChanged: (_) {
+                                  // Trigger validation of confirm password when password changes
+                                  if (formKey.currentState != null) {
+                                    formKey.currentState!.validate();
+                                  }
+                                },
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller:
+                                    authController.signupConfirmPasswordController,
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Re-enter password',
+                                  hintText: 'Re-enter password',
+                                ),
+                                validator: (value) => authController
+                                    .validateConfirmPassword(value),
+                                onChanged: (_) {
+                                  // Trigger validation when confirm password changes
+                                  if (formKey.currentState != null) {
+                                    formKey.currentState!.validate();
+                                  }
+                                },
+                                autovalidateMode: AutovalidateMode.onUserInteraction,
                               ),
                               const SizedBox(height: 16),
                               Text.rich(
@@ -98,50 +137,65 @@ class SignupPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 24),
                               Obx(
-                                () => LoamButton(
-                                  text: authController.isLoading
-                                      ? 'Creating account...'
-                                      : 'Continue',
-                                  onPressed: () {
-                                    if (formKey.currentState!.validate()) {
-                                      authController.signUp();
-                                    }
-                                  },
-                                  isLoading: authController.isLoading,
-                                ),
+                                () {
+                                  final email = authController.signupEmailController.text.trim();
+                                  final password = authController.signupPasswordController.text;
+                                  final confirmPassword = authController.signupConfirmPasswordController.text;
+                                  
+                                  final isEmailValid = authController.validateEmail(email) == null;
+                                  final isPasswordValid = authController.validatePassword(password, isSignup: true) == null;
+                                  final isConfirmPasswordValid = authController.validateConfirmPassword(confirmPassword) == null;
+                                  
+                                  final isFormValid = isEmailValid && isPasswordValid && isConfirmPasswordValid && 
+                                                      email.isNotEmpty && password.isNotEmpty && confirmPassword.isNotEmpty;
+                                  
+                                  return LoamButton(
+                                    text: authController.isLoading
+                                        ? 'Creating account...'
+                                        : 'Continue',
+                                    onPressed: isFormValid && !authController.isLoading
+                                        ? () {
+                                            if (formKey.currentState!.validate()) {
+                                              authController.signUp();
+                                            }
+                                          }
+                                        : null,
+                                    isLoading: authController.isLoading,
+                                  );
+                                },
                               ),
                             ],
                           ),
 
                           const Spacer(),
-                          const SizedBox(height: 24),
+                          
 
                           // Login link
-                          Center(
-                            child: Text.rich(
-                              TextSpan(
-                                text: 'Already have an account? ',
-                                style: TextStyle(
-                                  color: AppColors.mutedForeground,
-                                ),
-                                children: [
-                                  WidgetSpan(
-                                    child: GestureDetector(
-                                      onTap: () => Get.toNamed(AppRoutes.login),
-                                      child: Text(
-                                        'Log in',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
+                           Center(
+                             child: Text.rich(
+                                TextSpan(
+                                  text: 'Already have an account? ',
+                                  style: TextStyle(
+                                    color: AppColors.mutedForeground,
+                                  ),
+                                  children: [
+                                    WidgetSpan(
+                                      child: GestureDetector(
+                                        onTap: () => Get.toNamed(AppRoutes.login),
+                                        child: Text(
+                                          'Log in',
+                                          style: TextStyle(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                           ),
+                        SizedBox(height: 16),
                         ],
                       ),
                     ),

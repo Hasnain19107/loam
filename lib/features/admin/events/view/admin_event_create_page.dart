@@ -373,27 +373,36 @@ class AdminEventCreatePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Obx(
-                            () => Switch(
-                              value: controller.hideLocationUntilApproved.value,
-                              onChanged: (value) {
-                                controller.hideLocationUntilApproved.value =
-                                    value;
-                              },
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Location will be shared only after participants are approved',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.foreground,
+                      Obx(
+                        () {
+                          final isDisabled = !controller.requiresApproval.value;
+                          return Row(
+                            children: [
+                              Switch(
+                                value: controller.hideLocationUntilApproved.value,
+                                onChanged: isDisabled
+                                    ? null
+                                    : (value) {
+                                        controller.hideLocationUntilApproved.value =
+                                            value;
+                                      },
                               ),
-                            ),
-                          ),
-                        ],
+                              Expanded(
+                                child: Text(
+                                  isDisabled
+                                      ? 'Enable "Approval Required" to use this setting'
+                                      : 'Location will be shared only after participants are approved',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDisabled
+                                        ? AppColors.mutedForeground.withOpacity(0.6)
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -423,6 +432,10 @@ class AdminEventCreatePage extends StatelessWidget {
                             value: controller.requiresApproval.value,
                             onChanged: (value) {
                               controller.requiresApproval.value = value;
+                              // If approval is disabled, also disable hide location
+                              if (!value) {
+                                controller.hideLocationUntilApproved.value = false;
+                              }
                             },
                           ),
                         ),

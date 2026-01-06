@@ -443,12 +443,23 @@ class FirebaseService {
   // Event Participant Methods
   Future<void> registerForEvent(String eventId, String userId) async {
     try {
+      // Get event to check if approval is required
+      final event = await getEvent(eventId);
+      if (event == null) {
+        throw Exception('Event not found');
+      }
+
+      // Determine status based on whether approval is required
+      final status = event.requiresApproval
+          ? AppConstants.participationStatusPending
+          : AppConstants.participationStatusApproved;
+
       await _firestore
           .collection(AppConstants.eventParticipantsCollection)
           .add({
             'event_id': eventId,
             'user_id': userId,
-            'status': AppConstants.participationStatusPending,
+            'status': status,
             'created_at': FieldValue.serverTimestamp(),
             'updated_at': FieldValue.serverTimestamp(),
           });
@@ -663,7 +674,11 @@ class FirebaseService {
       await _firestore
           .collection(AppConstants.appSettingsCollection)
           .doc(key)
-          .set({'value': value}, SetOptions(merge: true));
+          .set({
+            'key': key,
+            'value': value,
+            'updated_at': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
     } catch (e) {
       throw Exception('Error setting app setting: $e');
     }
@@ -781,6 +796,179 @@ class FirebaseService {
       throw Exception('Error updating user shadow block: $e');
     }
   }
+
+  // Admin Settings Methods
+  Future<List<Map<String, dynamic>>> getAdmins() async {
+    try {
+      // Get all admin roles (super_admin and event_host)
+      final rolesSnapshot = await _firestore
+          .collection(AppConstants.userRolesCollection)
+          .where('role', whereIn: [
+            AppConstants.roleSuperAdmin,
+            AppConstants.roleEventHost
+          ])
+          .get();
+
+      if (rolesSnapshot.docs.isEmpty) {
+        return [];
+      }
+
+      // Get user IDs
+      final userIds = rolesSnapshot.docs
+          .map((doc) => doc.data()['user_id'] as String)
+          .toList();
+
+      // Get profiles for these users
+      final profilesSnapshot = await _firestore
+          .collection(AppConstants.profilesCollection)
+          .where(FieldPath.documentId, whereIn: userIds)
+          .get();
+
+      // Create a map of userId -> profile
+      final profileMap = <String, Map<String, dynamic>>{};
+      for (var doc in profilesSnapshot.docs) {
+        profileMap[doc.id] = doc.data();
+      }
+
+      // Combine roles with profiles
+      final admins = <Map<String, dynamic>>[];
+      for (var roleDoc in rolesSnapshot.docs) {
+        final roleData = roleDoc.data();
+        final userId = roleData['user_id'] as String;
+        final role = roleData['role'] as String;
+        final profile = profileMap[userId];
+
+        admins.add({
+          'id': roleDoc.id,
+          'user_id': userId,
+          'role': role,
+          'email': profile?['email'] ?? 'Unknown',
+        });
+      }
+
+      return admins;
+    } catch (e) {
+      throw Exception('Error fetching admins: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAdminInvites() async {
+    try {
+      final snapshot = await _firestore
+          .collection(AppConstants.adminInvitesCollection)
+          .orderBy('created_at', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'email': data['email'] ?? '',
+          'role': data['role'] ?? AppConstants.roleEventHost,
+          'created_at': data['created_at'],
+        };
+      }).toList();
+    } catch (e) {
+      throw Exception('Error fetching admin invites: $e');
+    }
+  }
+
+  // Find user by email in profiles collection
+  Future<String?> findUserIdByEmail(String email) async {
+    try {
+      final snapshot = await _firestore
+          .collection(AppConstants.profilesCollection)
+          .where('email', isEqualTo: email.toLowerCase().trim())
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.id; // Return user ID (document ID)
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Error finding user by email: $e');
+    }
+  }
+
+  Future<void> createAdminInvite(String email, String role) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final emailLower = email.toLowerCase().trim();
+
+      // First, check if user exists by email
+      final userId = await findUserIdByEmail(emailLower);
+
+      if (userId != null) {
+        // User exists - directly add them to user_roles collection
+        // Check if role already exists
+        final existingRoles = await getUserRoles(userId);
+        if (existingRoles.contains(role)) {
+          throw Exception('This user already has the $role role');
+        }
+
+        // Add the role directly
+        await _firestore.collection(AppConstants.userRolesCollection).add({
+          'user_id': userId,
+          'role': role,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+        return; // Success - user role added directly
+      }
+
+      // User doesn't exist - check if invite already exists
+      final existingSnapshot = await _firestore
+          .collection(AppConstants.adminInvitesCollection)
+          .where('email', isEqualTo: emailLower)
+          .get();
+
+      if (existingSnapshot.docs.isNotEmpty) {
+        throw Exception('This email has already been invited');
+      }
+
+      // Create invite for non-existing user
+      await _firestore.collection(AppConstants.adminInvitesCollection).add({
+        'email': emailLower,
+        'role': role,
+        'invited_by': currentUser.uid,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Error creating admin invite: $e');
+    }
+  }
+
+  Future<void> removeAdmin(String roleId) async {
+    try {
+      await _firestore
+          .collection(AppConstants.userRolesCollection)
+          .doc(roleId)
+          .delete();
+    } catch (e) {
+      throw Exception('Error removing admin: $e');
+    }
+  }
+
+  Future<void> removeAdminInvite(String inviteId) async {
+    try {
+      await _firestore
+          .collection(AppConstants.adminInvitesCollection)
+          .doc(inviteId)
+          .delete();
+    } catch (e) {
+      throw Exception('Error removing admin invite: $e');
+    }
+  }
+
+  Future<bool> isSuperAdmin(String userId) async {
+    final roles = await getUserRoles(userId);
+    return roles.contains(AppConstants.roleSuperAdmin);
+  }
+
 
   Future<void> updateUserAdminNotes(String userId, String notes) async {
     try {

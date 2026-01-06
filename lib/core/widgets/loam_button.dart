@@ -14,6 +14,7 @@ class LoamButton extends StatelessWidget {
   final LoamButtonVariant variant;
   final bool isLoading;
   final IconData? icon;
+  final Widget? iconWidget;
   final double? width;
 
   const LoamButton({
@@ -23,6 +24,7 @@ class LoamButton extends StatelessWidget {
     this.variant = LoamButtonVariant.primary,
     this.isLoading = false,
     this.icon,
+    this.iconWidget,
     this.width,
   });
 
@@ -55,7 +57,10 @@ class LoamButton extends StatelessWidget {
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (icon != null) ...[
+                    if (iconWidget != null) ...[
+                      SizedBox(width: 20, height: 20, child: iconWidget),
+                      const SizedBox(width: 8),
+                    ] else if (icon != null) ...[
                       Icon(icon, size: 20),
                       const SizedBox(width: 8),
                     ],
@@ -133,7 +138,10 @@ class LoamButton extends StatelessWidget {
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (icon != null) ...[
+                    if (iconWidget != null) ...[
+                      SizedBox(width: 20, height: 20, child: iconWidget),
+                      const SizedBox(width: 8),
+                    ] else if (icon != null) ...[
                       Icon(icon, size: 20),
                       const SizedBox(width: 8),
                     ],

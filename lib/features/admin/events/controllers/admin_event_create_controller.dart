@@ -52,6 +52,26 @@ class AdminEventCreateController extends GetxController {
     // Check if we have an event to edit passed via arguments
     if (Get.arguments != null && Get.arguments is EventModel) {
       loadEventForEditing(Get.arguments as EventModel);
+    } else {
+      // Load default settings for new events
+      _loadEventDefaults();
+    }
+  }
+
+  Future<void> _loadEventDefaults() async {
+    try {
+      final approvalValue = await _firebaseService.getAppSetting('event_default_requires_approval');
+      if (approvalValue != null) {
+        requiresApproval.value = approvalValue == true;
+      }
+
+      final locationValue = await _firebaseService.getAppSetting('event_default_reveal_location_after_approval');
+      if (locationValue != null) {
+        hideLocationUntilApproved.value = locationValue == true;
+      }
+    } catch (e) {
+      print('Error loading event defaults: $e');
+      // Use defaults if loading fails
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/loam_button.dart';
+import '../../../../data/network/remote/app_settings_service.dart';
 import '../../controller/quiz_controller.dart';
 
 class QuizPage extends StatefulWidget {
@@ -14,6 +15,25 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   final _quizController = Get.put(QuizController());
+  late AppSettingsService _settingsService;
+
+  @override
+  void initState() {
+    super.initState();
+    // Get settings service
+    if (Get.isRegistered<AppSettingsService>()) {
+      _settingsService = Get.find<AppSettingsService>();
+    } else {
+      _settingsService = Get.put(AppSettingsService());
+    }
+    
+    // Check if quiz onboarding is disabled, redirect to signup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_settingsService.shouldShowQuiz()) {
+        Get.offNamed(AppRoutes.signup);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,12 +116,16 @@ class _QuizPageState extends State<QuizPage> {
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        question.questionText,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          question.questionText,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.start,
+                        ),
                       ),
                       const SizedBox(height: 48),
 
@@ -135,14 +159,18 @@ class _QuizPageState extends State<QuizPage> {
                         }),
 
                       if (questionType == 'scale_1_10') ...[
-                        Text(
-                          '${question.scaleLabelLow ?? '1'} - ${question.scaleLabelHigh ?? '10'}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.mutedForeground,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            question.scaleLabelLow ?? 'Rarely',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.mutedForeground,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -158,7 +186,7 @@ class _QuizPageState extends State<QuizPage> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? AppColors.primary
-                                      : AppColors.secondary,
+                                      : AppColors.border.withAlpha(60),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Center(
@@ -176,6 +204,18 @@ class _QuizPageState extends State<QuizPage> {
                               ),
                             );
                           }),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            question.scaleLabelHigh ?? 'Very Often',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.mutedForeground,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
                         LoamButton(

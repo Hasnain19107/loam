@@ -94,14 +94,18 @@ class ProfileController extends GetxController {
   final RxString _relationshipStatus = 'single'.obs;
   final RxBool _hasChildren = false.obs;
   final RxString _gender = ''.obs;
+  bool _isEditProfileInitialized = false;
+  bool _isDisposed = false;
 
   // Getters
   String get relationshipStatus => _relationshipStatus.value;
   bool get hasChildren => _hasChildren.value;
   String get gender => _gender.value;
+  bool get isEditProfileInitialized => _isEditProfileInitialized;
 
   @override
   void onClose() {
+    _isDisposed = true;
     firstNameController.dispose();
     phoneController.dispose();
     workIndustryController.dispose();
@@ -110,14 +114,26 @@ class ProfileController extends GetxController {
   }
 
   void initEditProfile() {
+    if (_isEditProfileInitialized || _isDisposed) return; // Already initialized or disposed
+    
     final profile = userProfile;
-    firstNameController.text = profile?.firstName ?? '';
-    phoneController.text = profile?.phone ?? '';
-    workIndustryController.text = profile?.workIndustry ?? '';
-    countryOfBirthController.text = profile?.countryOfBirth ?? '';
-    _relationshipStatus.value = profile?.relationshipStatus ?? 'single';
-    _hasChildren.value = profile?.hasChildren ?? false;
-    _gender.value = profile?.gender ?? '';
+    try {
+      firstNameController.text = profile?.firstName ?? '';
+      phoneController.text = profile?.phone ?? '';
+      workIndustryController.text = profile?.workIndustry ?? '';
+      countryOfBirthController.text = profile?.countryOfBirth ?? '';
+      _relationshipStatus.value = profile?.relationshipStatus ?? 'single';
+      _hasChildren.value = profile?.hasChildren ?? false;
+      _gender.value = profile?.gender ?? '';
+      _isEditProfileInitialized = true;
+    } catch (e) {
+      // Controllers might be disposed, ignore
+      print('Error initializing edit profile: $e');
+    }
+  }
+  
+  void resetEditProfile() {
+    _isEditProfileInitialized = false;
   }
 
   void setRelationshipStatus(String status) {
@@ -133,6 +149,8 @@ class ProfileController extends GetxController {
   }
 
   Future<void> saveProfile() async {
+    if (_isDisposed) return;
+    
     try {
       await updateProfile({
         'first_name': firstNameController.text.trim(),

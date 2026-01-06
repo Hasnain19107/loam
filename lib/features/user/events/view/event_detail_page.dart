@@ -208,10 +208,24 @@ class EventDetailPage extends StatelessWidget {
                                   text: displayTime,
                                 ),
                                 const SizedBox(height: 12),
-                                _EventDetailRow(
-                                  icon: Icons.location_on,
-                                  text: event.location ?? 'Location TBA',
-                                ),
+                                Obx(() {
+                                  // Show location if:
+                                  // 1. Approval is NOT required, OR
+                                  // 2. Approval is required BUT hideLocationUntilApproved is false, OR
+                                  // 3. Approval is required AND hideLocationUntilApproved is true AND user is approved
+                                  // Hide location only if:
+                                  // Approval is required AND hideLocationUntilApproved is true AND user is NOT approved
+                                  final shouldHideLocation = event.requiresApproval &&
+                                      event.hideLocationUntilApproved &&
+                                      !controller.isApproved;
+                                  
+                                  return _EventDetailRow(
+                                    icon: Icons.location_on,
+                                    text: shouldHideLocation
+                                        ? 'Location will be shown after admin approval'
+                                        : (event.location ?? 'Location TBA'),
+                                  );
+                                }),
                               ],
                             ),
                             const SizedBox(height: 24),
@@ -643,10 +657,18 @@ class _EventDetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 20, color: AppColors.primary),
         const SizedBox(width: 12),
-        Text(text, style: TextStyle(color: AppColors.mutedForeground)),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(color: AppColors.mutedForeground),
+            softWrap: true,
+            overflow: TextOverflow.visible,
+          ),
+        ),
       ],
     );
   }

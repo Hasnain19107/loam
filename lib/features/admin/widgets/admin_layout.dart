@@ -42,6 +42,11 @@ class AdminLayout extends StatelessWidget {
         label: 'Quiz Responses',
         route: AppRoutes.adminQuizResponses,
       ),
+      _NavItem(
+        icon: Icons.settings,
+        label: 'Settings',
+        route: AppRoutes.adminSettings,
+      ),
     ];
 
     return Scaffold(

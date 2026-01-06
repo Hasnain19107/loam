@@ -30,6 +30,8 @@ import '../../features/user/settings/view/city_settings_page.dart';
 import '../../features/auth/view/blocked_screen_page.dart';
 import '../../features/user/common/view/not_found_page.dart';
 import '../../features/admin/dashboard/controller/admin_controller.dart';
+import '../../features/admin/dashboard/controller/admin_settings_controller.dart';
+import '../../features/admin/dashboard/controller/admin_export_controller.dart';
 import '../../features/admin/dashboard/view/admin_dashboard_page.dart';
 import '../../features/admin/dashboard/view/admin_users_page.dart';
 import '../../features/admin/events/view/admin_events_page.dart';
@@ -194,6 +196,10 @@ class AppPages {
     GetPage(
       name: AppRoutes.adminSettings,
       page: () => const AdminSettingsPage(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AdminSettingsController>(() => AdminSettingsController());
+        Get.lazyPut<AdminExportController>(() => AdminExportController());
+      }),
     ),
     GetPage(
       name: AppRoutes.adminQuizBuilder,

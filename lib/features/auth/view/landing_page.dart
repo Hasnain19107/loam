@@ -2,15 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
-import '../controller/auth_controller.dart';
+import '../../../data/network/remote/app_settings_service.dart';
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
+  State<LandingPage> createState() => _LandingPageState();
+}
 
+class _LandingPageState extends State<LandingPage> {
+  late AppSettingsService _settingsService;
+
+  @override
+  void initState() {
+    super.initState();
+    // Get or create the settings service
+    if (Get.isRegistered<AppSettingsService>()) {
+      _settingsService = Get.find<AppSettingsService>();
+    } else {
+      _settingsService = Get.put(AppSettingsService());
+    }
+    // Ensure settings are loaded
+    _settingsService.initializeSettings();
+  }
+
+  void _handleGetStarted() {
+    // Check if quiz onboarding is enabled
+    if (_settingsService.shouldShowQuiz()) {
+      Get.toNamed(AppRoutes.quiz);
+    } else {
+      // Skip quiz and go straight to signup
+      Get.toNamed(AppRoutes.signup);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -54,16 +82,29 @@ class LandingPage extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 48),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Get.toNamed(AppRoutes.quiz),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Get started'),
-                    ),
-                  ),
+                  Obx(() => SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _settingsService.isLoading
+                              ? null
+                              : _handleGetStarted,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: _settingsService.isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text('Get started'),
+                        ),
+                      )),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,

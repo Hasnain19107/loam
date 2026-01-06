@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/widgets/loam_button.dart';
+import '../../../data/network/remote/app_settings_service.dart';
 import '../controller/auth_controller.dart';
 
 class LoginPage extends StatelessWidget {
@@ -132,7 +133,12 @@ class LoginPage extends StatelessWidget {
                     () => LoamButton(
                       text: 'Continue with Google',
                       variant: LoamButtonVariant.social,
-                      icon: Icons.g_mobiledata,
+                      iconWidget: Image.asset(
+                        'assets/google.png',
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.contain,
+                      ),
                       onPressed:
                           (authController.isLoadingApple ||
                               authController.isLoadingGoogle)
@@ -153,7 +159,17 @@ class LoginPage extends StatelessWidget {
                         children: [
                           WidgetSpan(
                             child: GestureDetector(
-                              onTap: () => Get.toNamed(AppRoutes.quiz),
+                              onTap: () {
+                                // Check if quiz onboarding is enabled
+                                final settingsService = Get.isRegistered<AppSettingsService>()
+                                    ? Get.find<AppSettingsService>()
+                                    : Get.put(AppSettingsService());
+                                if (settingsService.shouldShowQuiz()) {
+                                  Get.toNamed(AppRoutes.quiz);
+                                } else {
+                                  Get.toNamed(AppRoutes.signup);
+                                }
+                              },
                               child: Text(
                                 'Sign up',
                                 style: TextStyle(

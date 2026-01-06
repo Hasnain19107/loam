@@ -30,6 +30,8 @@ class AuthController extends GetxController {
   final TextEditingController signupEmailController = TextEditingController();
   final TextEditingController signupPasswordController =
       TextEditingController();
+  final TextEditingController signupConfirmPasswordController =
+      TextEditingController();
 
   // Onboarding state
   final RxInt _onboardingStep = 1.obs;
@@ -118,6 +120,7 @@ class AuthController extends GetxController {
     loginPasswordController.dispose();
     signupEmailController.dispose();
     signupPasswordController.dispose();
+    signupConfirmPasswordController.dispose();
     onboardingFirstNameController.dispose();
     onboardingLastNameController.dispose();
     onboardingPhoneController.dispose();
@@ -194,6 +197,16 @@ class AuthController extends GetxController {
     }
     if (isSignup && value.length < 6) {
       return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  String? validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please re-enter your password';
+    }
+    if (value != signupPasswordController.text) {
+      return 'Passwords do not match';
     }
     return null;
   }
@@ -286,9 +299,11 @@ class AuthController extends GetxController {
   Future<void> signUp() async {
     final email = signupEmailController.text.trim();
     final password = signupPasswordController.text;
+    final confirmPassword = signupConfirmPasswordController.text;
 
     if (validateEmail(email) != null ||
-        validatePassword(password, isSignup: true) != null) {
+        validatePassword(password, isSignup: true) != null ||
+        validateConfirmPassword(confirmPassword) != null) {
       return;
     }
 
