@@ -10,6 +10,7 @@ import '../../../data/network/remote/firebase_service.dart';
 import '../../../data/models/user_profile_model.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/constants/country_codes.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../data/network/local/preferences/shared_preference.dart';
 
 class AuthController extends GetxController {
@@ -23,6 +24,10 @@ class AuthController extends GetxController {
   final RxBool _isLoading = false.obs;
   final RxBool _isLoadingGoogle = false.obs;
   final RxBool _isLoadingApple = false.obs;
+  final RxBool _isCheckingVerification = false.obs;
+  final RxBool _emailVerificationSent = false.obs;
+  final RxInt _resendCooldown = 0.obs;
+  DateTime? _lastResendTime;
 
   // Login/Signup form controllers
   final TextEditingController loginEmailController = TextEditingController();
@@ -32,6 +37,11 @@ class AuthController extends GetxController {
       TextEditingController();
   final TextEditingController signupConfirmPasswordController =
       TextEditingController();
+  
+  // Reactive variables for form validation
+  final RxString _signupEmail = ''.obs;
+  final RxString _signupPassword = ''.obs;
+  final RxString _signupConfirmPassword = ''.obs;
 
   // Onboarding state
   final RxInt _onboardingStep = 1.obs;
@@ -63,6 +73,12 @@ class AuthController extends GetxController {
   bool get isLoading => _isLoading.value;
   bool get isLoadingGoogle => _isLoadingGoogle.value;
   bool get isLoadingApple => _isLoadingApple.value;
+  bool get isCheckingVerification => _isCheckingVerification.value;
+  bool get emailVerificationSent => _emailVerificationSent.value;
+  int get resendCooldown => _resendCooldown.value;
+  String get signupEmail => _signupEmail.value;
+  String get signupPassword => _signupPassword.value;
+  String get signupConfirmPassword => _signupConfirmPassword.value;
   bool get isAuthenticated => _user.value != null;
   bool get isEmailVerified =>
       (_user.value?.emailVerified ?? false) ||
@@ -103,6 +119,18 @@ class AuthController extends GetxController {
   }
 
   void _setupOnboardingListeners() {
+    // Signup form listeners
+    signupEmailController.addListener(() {
+      _signupEmail.value = signupEmailController.text;
+    });
+    signupPasswordController.addListener(() {
+      _signupPassword.value = signupPasswordController.text;
+    });
+    signupConfirmPasswordController.addListener(() {
+      _signupConfirmPassword.value = signupConfirmPasswordController.text;
+    });
+    
+    // Onboarding form listeners
     onboardingFirstNameController.addListener(() {
       _onboardingFirstName.value = onboardingFirstNameController.text;
     });
@@ -314,16 +342,103 @@ class AuthController extends GetxController {
       // Wait for user profile to load
       await reloadUser();
 
-      // Save quiz answers immediately after sign-up
-      await _saveQuizAnswersIfExists();
-
-      if (!isOnboardingComplete()) {
-        Get.offAllNamed(AppRoutes.onboarding);
-      } else {
-        Get.offAllNamed(AppRoutes.main);
-      }
+      // Set flag to show verification UI on the same page
+      _emailVerificationSent.value = true;
+      
+      Get.snackbar(
+        'Verification Email Sent',
+        'Please check your email and click the verification link',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.primary,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to create account: ${e.toString()}');
+      // Handle specific Firebase errors
+      final errorMessage = e.toString().toLowerCase();
+      
+      if (errorMessage.contains('email-already-in-use')) {
+        // Account exists - check if it's verified or not
+        print('⚠️ [SIGNUP] Email already in use, checking verification status...');
+        
+        try {
+          // Try to sign in with the provided credentials
+          await _firebaseService.signIn(email, password);
+          await reloadUser();
+          
+          // If we get here, credentials are correct
+          if (!isEmailVerified) {
+            // Account exists but not verified - help the user
+            print('📧 [SIGNUP] Account exists but not verified, resending email...');
+            
+            Get.snackbar(
+              'Account Found!',
+              'We found your account. Sending a new verification email...',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.orange,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 4),
+            );
+            
+            // Resend verification email
+            await _firebaseService.sendEmailVerification();
+            
+            // Navigate to EmailVerificationPage
+            Get.offAllNamed(AppRoutes.emailVerification);
+          } else {
+            // Account exists and is already verified
+            print('✅ [SIGNUP] Account exists and is verified');
+            
+            // Sign out the user (they used signup form, not login)
+            await _firebaseService.signOut();
+            
+            Get.snackbar(
+              'Account Already Exists',
+              'This email is already registered. Please login instead.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: AppColors.primary,
+              colorText: Colors.white,
+              duration: const Duration(seconds: 5),
+            );
+          }
+        } catch (signInError) {
+          // Password is wrong or other error
+          print('❌ [SIGNUP] Sign-in failed: $signInError');
+          
+          Get.snackbar(
+            'Account Already Exists',
+            'This email is already registered. If this is your account, please use the correct password or login.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Get.theme.colorScheme.error,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+        }
+      } else if (errorMessage.contains('weak-password')) {
+        Get.snackbar(
+          'Weak Password',
+          'Please choose a stronger password',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else if (errorMessage.contains('invalid-email')) {
+        Get.snackbar(
+          'Invalid Email',
+          'Please enter a valid email address',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else if (errorMessage.contains('network')) {
+        Get.snackbar(
+          'Network Error',
+          'Please check your internet connection',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to create account. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } finally {
       _isLoading.value = false;
     }
@@ -349,6 +464,19 @@ class AuthController extends GetxController {
       loginPasswordController.clear();
 
       if (_user.value != null) {
+        // Check if email is verified (skip for Google/Apple sign-in)
+        if (!isEmailVerified) {
+          Get.offAllNamed(AppRoutes.emailVerification);
+          Get.snackbar(
+            'Email Not Verified',
+            'Please verify your email to continue',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Get.theme.colorScheme.error,
+            colorText: Colors.white,
+          );
+          return;
+        }
+
         final userId = _user.value!.uid;
         // Check and save admin status explicitly before redirect
         final isAdmin = await _firebaseService.isAdmin(userId);
@@ -665,6 +793,153 @@ class AuthController extends GetxController {
     }
   }
 
+  // Email verification methods
+  Future<void> checkEmailVerification() async {
+    try {
+      _isCheckingVerification.value = true;
+      
+      print('🔍 [VERIFY] Checking email verification status...');
+      print('   - Current user: ${_user.value?.email}');
+      print('   - Current verified status: ${_user.value?.emailVerified}');
+      
+      // Reload user from Firebase to get latest verification status
+      await _firebaseService.reloadUser();
+      
+      // Get the fresh user object
+      final currentUser = _firebaseService.currentUser;
+      
+      print('   - After reload user: ${currentUser?.email}');
+      print('   - After reload verified: ${currentUser?.emailVerified}');
+      
+      // Update local user object
+      _user.value = currentUser;
+      
+      print('   - isEmailVerified getter: $isEmailVerified');
+      
+      if (isEmailVerified) {
+        print('✅ [VERIFY] Email is verified! Proceeding...');
+        // Email is verified, proceed to next step
+        await proceedAfterEmailVerification();
+      } else {
+        print('❌ [VERIFY] Email is NOT verified yet');
+        Get.snackbar(
+          'Not Verified Yet',
+          'Please check your email and click the verification link',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.destructive,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      print('❌ [VERIFY] Error checking email verification: $e');
+      final errorMessage = e.toString().toLowerCase();
+      
+      if (errorMessage.contains('network')) {
+        Get.snackbar(
+          'Network Error',
+          'Please check your internet connection and try again',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to check verification status',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      _isCheckingVerification.value = false;
+    }
+  }
+
+  Future<void> resendVerificationEmail() async {
+    // Check if we're in cooldown period
+    if (_lastResendTime != null) {
+      final timeSinceLastResend = DateTime.now().difference(_lastResendTime!);
+      const cooldownDuration = Duration(seconds: 60);
+      
+      if (timeSinceLastResend < cooldownDuration) {
+        final remainingSeconds = cooldownDuration.inSeconds - timeSinceLastResend.inSeconds;
+        Get.snackbar(
+          'Please Wait',
+          'You can resend the email in $remainingSeconds seconds',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.destructive,
+          colorText: Colors.white,
+        );
+        return;
+      }
+    }
+
+    try {
+      await _firebaseService.sendEmailVerification();
+      _lastResendTime = DateTime.now();
+      
+      // Start cooldown timer
+      _resendCooldown.value = 60;
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (_resendCooldown.value > 0) {
+          _resendCooldown.value--;
+          return true;
+        }
+        return false;
+      });
+      
+      Get.snackbar(
+        'Email Sent',
+        'Verification email has been sent successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      print('Error resending verification email: $e');
+      final errorMessage = e.toString().toLowerCase();
+      
+      if (errorMessage.contains('too-many-requests')) {
+        Get.snackbar(
+          'Too Many Requests',
+          'Firebase has temporarily blocked requests. Please wait a few minutes and try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.destructive,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 6),
+        );
+      } else if (errorMessage.contains('network')) {
+        Get.snackbar(
+          'Network Error',
+          'Please check your internet connection',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to send verification email. Please try again later.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
+  }
+
+  Future<void> proceedAfterEmailVerification() async {
+    try {
+      // Save quiz answers if they exist
+      await _saveQuizAnswersIfExists();
+
+      // Navigate based on onboarding status
+      if (!isOnboardingComplete()) {
+        Get.offAllNamed(AppRoutes.onboarding);
+      } else {
+        Get.offAllNamed(AppRoutes.main);
+      }
+    } catch (e) {
+      print('Error proceeding after verification: $e');
+      Get.snackbar('Error', 'Failed to proceed: ${e.toString()}');
+    }
+  }
+
+
   // Onboarding methods
   void setOnboardingCountryCode(CountryCode code) {
     _onboardingCountryCode.value = code;
@@ -789,6 +1064,9 @@ class AuthController extends GetxController {
 
         await reloadUser();
 
+        // Clear all signup and onboarding data
+        clearSignupData();
+
         Get.offAllNamed(AppRoutes.main);
       } catch (e) {
         print('Error completing onboarding: $e');
@@ -853,7 +1131,34 @@ class AuthController extends GetxController {
     _onboardingNotifications.value = true;
     _isOnboardingSubmitting.value = false;
     _isUploadingPhoto.value = false;
+  }
+
+  /// Clears all signup and onboarding data after successful profile completion
+  void clearSignupData() {
+    print('🧹 [CLEANUP] Clearing all signup and onboarding data...');
     
+    // Clear signup form controllers
+    signupEmailController.clear();
+    signupPasswordController.clear();
+    signupConfirmPasswordController.clear();
+    
+    // Clear login form controllers
+    loginEmailController.clear();
+    loginPasswordController.clear();
+    
+    // Reset email verification state
+    _emailVerificationSent.value = false;
+    _resendCooldown.value = 0;
+    _lastResendTime = null;
+    
+    // Reset onboarding state
+    resetOnboarding();
+    
+    // Clear quiz answers
+    _quizAnswers.clear();
+    _quizQuestionsCache.clear();
+    
+    print('✅ [CLEANUP] All signup data cleared successfully');
   }
 
   bool isBlocked() {

@@ -23,10 +23,35 @@ class FirebaseService {
   Stream<firebase_auth.User?> get authStateChanges => _auth.authStateChanges();
 
   Future<void> signUp(String email, String password) async {
-    await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      print('🔵 [SIGNUP] Creating user account for: $email');
+      
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      if (userCredential.user == null) {
+        print('❌ [SIGNUP] ERROR: User is null after creation');
+        throw Exception('User creation failed: user is null');
+      }
+      
+      print('✅ [SIGNUP] User created successfully');
+      print('   - User ID: ${userCredential.user!.uid}');
+      print('   - Email: ${userCredential.user!.email}');
+      print('   - Email Verified: ${userCredential.user!.emailVerified}');
+      
+      print('📧 [SIGNUP] Sending verification email...');
+      
+      await userCredential.user!.sendEmailVerification();
+      
+      print('✅ [SIGNUP] Verification email sent successfully to: ${userCredential.user!.email}');
+      print('   ℹ️  Please check your inbox (and spam folder)');
+      
+    } catch (e) {
+      print('❌ [SIGNUP] Error: $e');
+      rethrow;
+    }
   }
 
   Future<void> signIn(String email, String password) async {

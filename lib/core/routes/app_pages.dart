@@ -9,6 +9,7 @@ import '../../features/auth/view/signup/auth_choice_page.dart';
 import '../../features/auth/view/login_page.dart';
 import '../../features/auth/view/forgot_password_page.dart';
 import '../../features/auth/view/signup/signup_page.dart';
+import '../../features/auth/view/email_verification_page.dart';
 import '../../features/auth/view/signup/profile_setup_page.dart';
 import '../../features/user/home/view/home_page.dart';
 import '../../features/user/home/controller/home_controller.dart';
@@ -61,6 +62,10 @@ class AppPages {
       page: () => const ForgotPasswordPage(),
     ),
     GetPage(name: AppRoutes.signup, page: () => const SignupPage()),
+    GetPage(
+      name: AppRoutes.emailVerification,
+      page: () => const EmailVerificationPage(),
+    ),
     GetPage(name: AppRoutes.onboarding, page: () => const ProfileSetupPage()),
 
     // Protected Routes
