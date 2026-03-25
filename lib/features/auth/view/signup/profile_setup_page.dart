@@ -214,6 +214,43 @@ class ProfileSetupPage extends StatelessWidget {
                   onChange: authController.setOnboardingBirthdate,
                 ),
               ),
+              const SizedBox(height: 16),
+              // Age verification error message
+              Obx(
+                () => authController.ageVerificationError.isNotEmpty
+                    ? Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.destructive.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.destructive,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: AppColors.destructive,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                authController.ageVerificationError,
+                                style: TextStyle(
+                                  color: AppColors.destructive,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               const Spacer(),
             ],
           ),
@@ -222,10 +259,7 @@ class ProfileSetupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildGenderStep(
-    BuildContext context,
-    AuthController authController,
-  ) {
+  Widget _buildGenderStep(BuildContext context, AuthController authController) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,9 +399,11 @@ class ProfileSetupPage extends StatelessWidget {
                           authController.isUploadingPhoto
                               ? 'Uploading...'
                               : authController.onboardingPhotoUrl != null &&
-                                      authController.onboardingPhotoUrl!.isNotEmpty
-                                  ? 'Change photo'
-                                  : 'Upload photo',
+                                    authController
+                                        .onboardingPhotoUrl!
+                                        .isNotEmpty
+                              ? 'Change photo'
+                              : 'Upload photo',
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -465,9 +501,7 @@ class ProfileSetupPage extends StatelessWidget {
     // Check user profile photo
     final profilePhoto = authController.userProfile?.photo;
     if (profilePhoto != null && profilePhoto.isNotEmpty) {
-      return ClipOval(
-        child: _buildImageWidget(profilePhoto),
-      );
+      return ClipOval(child: _buildImageWidget(profilePhoto));
     }
 
     // Show local path if available
@@ -478,10 +512,14 @@ class ProfileSetupPage extends StatelessWidget {
     }
 
     // Show initials or camera icon
-    final firstName = authController.onboardingFirstNameController.text.isNotEmpty
+    final firstName =
+        authController.onboardingFirstNameController.text.isNotEmpty
         ? authController.onboardingFirstNameController.text[0].toUpperCase()
-        : authController.userProfile?.firstName?.substring(0, 1).toUpperCase() ?? 'L';
-    
+        : authController.userProfile?.firstName
+                  ?.substring(0, 1)
+                  .toUpperCase() ??
+              'L';
+
     return Center(
       child: Text(
         firstName,

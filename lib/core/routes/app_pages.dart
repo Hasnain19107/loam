@@ -11,6 +11,9 @@ import '../../features/auth/view/forgot_password_page.dart';
 import '../../features/auth/view/signup/signup_page.dart';
 import '../../features/auth/view/email_verification_page.dart';
 import '../../features/auth/view/signup/profile_setup_page.dart';
+import '../../features/auth/view/signup/access_code_page.dart';
+import '../../features/auth/view/legal_document_page.dart';
+import '../../features/auth/view/community_agreement_page.dart';
 import '../../features/user/home/view/home_page.dart';
 import '../../features/user/home/controller/home_controller.dart';
 import '../../features/user/events/view/my_events_page.dart';
@@ -30,21 +33,6 @@ import '../../features/user/settings/view/language_settings_page.dart';
 import '../../features/user/settings/view/city_settings_page.dart';
 import '../../features/auth/view/blocked_screen_page.dart';
 import '../../features/user/common/view/not_found_page.dart';
-import '../../features/admin/dashboard/controller/admin_controller.dart';
-import '../../features/admin/dashboard/controller/admin_settings_controller.dart';
-import '../../features/admin/dashboard/controller/admin_export_controller.dart';
-import '../../features/admin/dashboard/view/admin_dashboard_page.dart';
-import '../../features/admin/dashboard/view/admin_users_page.dart';
-import '../../features/admin/events/view/admin_events_page.dart';
-import '../../features/admin/events/view/admin_event_create_page.dart';
-import '../../features/admin/events/view/admin_event_detail_page.dart';
-
-import '../../features/admin/events/view/admin_requests_page.dart';
-import '../../features/admin/events/view/admin_event_requests_page.dart';
-import '../../features/admin/dashboard/view/admin_settings_page.dart';
-import '../../features/admin/quize/view/admin_quiz_builder_page.dart';
-import '../../features/admin/quize/view/admin_quiz_questions_page.dart';
-import '../../features/admin/quize/view/admin_quiz_responses_page.dart';
 
 import 'app_routes.dart';
 
@@ -66,7 +54,24 @@ class AppPages {
       name: AppRoutes.emailVerification,
       page: () => const EmailVerificationPage(),
     ),
+    GetPage(name: AppRoutes.accessCode, page: () => const AccessCodePage()),
     GetPage(name: AppRoutes.onboarding, page: () => const ProfileSetupPage()),
+    GetPage(
+      name: AppRoutes.terms,
+      page: () => const LegalDocumentPage(type: 'terms'),
+    ),
+    GetPage(
+      name: AppRoutes.privacy,
+      page: () => const LegalDocumentPage(type: 'privacy'),
+    ),
+    GetPage(
+      name: AppRoutes.communityGuidelines,
+      page: () => const LegalDocumentPage(type: 'guidelines'),
+    ),
+    GetPage(
+      name: AppRoutes.communityAgreement,
+      page: () => const CommunityAgreementPage(),
+    ),
 
     // Protected Routes
     GetPage(
@@ -170,54 +175,6 @@ class AppPages {
       }),
     ),
     GetPage(name: AppRoutes.blocked, page: () => const BlockedScreenPage()),
-
-    // Admin Routes
-    GetPage(
-      name: AppRoutes.adminDashboard,
-      page: () => const AdminDashboardPage(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<AdminController>(() => AdminController());
-      }),
-    ),
-    GetPage(name: AppRoutes.adminUsers, page: () => const AdminUsersPage()),
-    GetPage(name: AppRoutes.adminEvents, page: () => const AdminEventsPage()),
-    GetPage(
-      name: AppRoutes.adminEventCreate,
-      page: () => const AdminEventCreatePage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminEventDetail,
-      page: () => const AdminEventDetailPage(),
-    ),
-
-    GetPage(
-      name: AppRoutes.adminRequests,
-      page: () => const AdminRequestsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminEventRequests,
-      page: () => const AdminEventRequestsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminSettings,
-      page: () => const AdminSettingsPage(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<AdminSettingsController>(() => AdminSettingsController());
-        Get.lazyPut<AdminExportController>(() => AdminExportController());
-      }),
-    ),
-    GetPage(
-      name: AppRoutes.adminQuizBuilder,
-      page: () => const AdminQuizBuilderPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminQuizQuestions,
-      page: () => const AdminQuizQuestionsPage(),
-    ),
-    GetPage(
-      name: AppRoutes.adminQuizResponses,
-      page: () => const AdminQuizResponsesPage(),
-    ),
 
     // Fallback
     GetPage(name: AppRoutes.notFound, page: () => const NotFoundPage()),

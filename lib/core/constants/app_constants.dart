@@ -26,9 +26,7 @@ class AppConstants {
   static const String matchmakerSessionsCollection = 'matchmaker_sessions';
   static const String matchmakerAnswersCollection = 'matchmaker_answers';
   static const String matchesCollection = 'matches';
-  static const String userRolesCollection = 'user_roles';
   static const String appSettingsCollection = 'app_settings';
-  static const String adminInvitesCollection = 'admin_invites';
   static const String eventReportsCollection = 'event_reports';
 
   // Storage Paths
@@ -56,31 +54,6 @@ class AppConstants {
   static const String routeSettingsCity = '/settings/city';
   static const String routeBlocked = '/blocked';
   static const String routeNotFound = '/not-found';
-
-  // Admin Routes
-  static const String routeAdminLogin = '/admin/login';
-  static const String routeAdminDashboard = '/admin';
-  static const String routeAdminUsers = '/admin/users';
-  static const String routeAdminEvents = '/admin/events';
-  static const String routeAdminEventCreate = '/admin/events/new';
-  static const String routeAdminEventDetail = '/admin/events/:id';
-  static const String routeAdminEventEdit = '/admin/events/:id/edit';
-  static const String routeAdminRequests = '/admin/requests';
-  static const String routeAdminEventRequests = '/admin/events/:id/requests';
-  static const String routeAdminSettings = '/admin/settings';
-  static const String routeAdminQuizBuilder = '/admin/quiz-builder';
-  static const String routeAdminQuizQuestions = '/admin/quiz-builder/:quizId';
-  static const String routeAdminQuizResponses = '/admin/quiz-responses';
-  static const String routeAdminMatchmakerBuilder = '/admin/matchmaker-builder';
-  static const String routeAdminMatchmakerQuestions = '/admin/matchmaker-builder/:setId';
-  static const String routeAdminMatchmakerResponses = '/admin/matchmaker-responses';
-  static const String routeAdminMatchmaking = '/admin/matchmaking';
-  static const String routeAdminMatchmakingDetail = '/admin/matchmaking/:userId';
-
-  // User Roles
-  static const String roleSuperAdmin = 'super_admin';
-  static const String roleEventHost = 'event_host';
-  static const String roleUser = 'user';
 
   // Event Status
   static const String eventStatusDraft = 'draft';
@@ -122,5 +95,13 @@ class AppConstants {
   // OTP
   static const int otpLength = 6;
   static const int otpResendCooldownSeconds = 30;
+
+  // Legal documents (update with your actual URLs)
+  static const String termsOfServiceUrl =
+      'https://www.example.com/terms'; // TODO: replace with real URL
+  static const String privacyPolicyUrl =
+      'https://www.example.com/privacy'; // TODO: replace with real URL
+  static const String communityGuidelinesUrl =
+      'https://www.example.com/community-guidelines'; // TODO: replace with real URL
 }
 

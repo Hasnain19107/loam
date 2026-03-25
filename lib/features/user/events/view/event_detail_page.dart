@@ -251,11 +251,11 @@ class EventDetailPage extends StatelessWidget {
                                 _buildActionButton(
                                   icon: Icons.chat_bubble_outline,
                                   label: 'Contact',
-                                  onPressed: controller.isApproved
+                                  onPressed: (event.contactNumber?.trim().isNotEmpty ?? false)
                                       ? () => controller.contactOrganizer()
                                       : null,
                                   isPrimary: false,
-                                  isDisabled: !controller.isApproved,
+                                  isDisabled: event.contactNumber?.trim().isEmpty ?? true,
                                 ),
                                 const SizedBox(width: 8),
                                 _buildActionButton(
@@ -616,18 +616,32 @@ class EventDetailPage extends StatelessWidget {
                     controller.openInBrowser();
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.flag, color: Colors.red),
-                  title: const Text(
-                    'Report event',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Open dialog using controller stub but defining dialog here since it is UI
-                    Get.dialog(_buildReportDialog());
-                  },
-                ),
+                Obx(() {
+                  final alreadyReported = controller.hasReportedThisEvent;
+                  return ListTile(
+                    leading: Icon(
+                      Icons.flag,
+                      color: alreadyReported ? AppColors.mutedForeground : Colors.red,
+                    ),
+                    title: Text(
+                      alreadyReported ? 'Already reported' : 'Report event',
+                      style: TextStyle(
+                        color: alreadyReported ? AppColors.mutedForeground : Colors.red,
+                      ),
+                    ),
+                    onTap: alreadyReported
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              Get.dialog(
+                                _ReportEventDialog(controller),
+                                barrierDismissible: false,
+                              );
+                            });
+                          },
+                  );
+                }),
               ],
             ),
             const SizedBox(height: 24),
@@ -637,12 +651,58 @@ class EventDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReportDialog() {
+}
+
+/// Dialog to enter report reason; on Submit saves to Firebase and closes.
+class _ReportEventDialog extends StatefulWidget {
+  final EventDetailController controller;
+
+  const _ReportEventDialog(this.controller);
+
+  @override
+  State<_ReportEventDialog> createState() => _ReportEventDialogState();
+}
+
+class _ReportEventDialogState extends State<_ReportEventDialog> {
+  final TextEditingController _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Thanks for letting us know'),
-      content: const Text('Our team will review this event.'),
+      title: const Text('Report event'),
+      content: SingleChildScrollView(
+        child: TextField(
+          controller: _reasonController,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: 'Why are you reporting this event? (optional)',
+            border: OutlineInputBorder(),
+            alignLabelWithHint: true,
+          ),
+        ),
+      ),
       actions: [
-        LoamButton(text: 'Done', onPressed: () => Get.toNamed(AppRoutes.main)),
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text('Cancel', style: TextStyle(color: AppColors.mutedForeground)),
+        ),
+        Obx(
+          () => LoamButton(
+            text: widget.controller.isReportSubmitting ? 'Submitting...' : 'Submit',
+            onPressed: widget.controller.isReportSubmitting
+                ? null
+                : () async {
+                    await widget.controller.submitReport(_reasonController.text);
+                    // Dialog is closed by controller on success
+                  },
+          ),
+        ),
       ],
     );
   }

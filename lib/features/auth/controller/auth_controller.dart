@@ -7,6 +7,7 @@ import 'package:loam/data/models/survey_question_model.dart';
 import 'package:loam/data/models/survey_response_model.dart';
 
 import '../../../data/network/remote/firebase_service.dart';
+import '../../../data/network/remote/app_settings_service.dart';
 import '../../../data/models/user_profile_model.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../core/constants/country_codes.dart';
@@ -17,7 +18,6 @@ class AuthController extends GetxController {
   final FirebaseService _firebaseService = FirebaseService();
   final SharedPreferenceService _prefsService = SharedPreferenceService();
   final _picker = ImagePicker();
-
 
   final Rx<firebase_auth.User?> _user = Rx<firebase_auth.User?>(null);
   final Rx<UserProfileModel?> _userProfile = Rx<UserProfileModel?>(null);
@@ -37,7 +37,7 @@ class AuthController extends GetxController {
       TextEditingController();
   final TextEditingController signupConfirmPasswordController =
       TextEditingController();
-  
+
   // Reactive variables for form validation
   final RxString _signupEmail = ''.obs;
   final RxString _signupPassword = ''.obs;
@@ -66,6 +66,7 @@ class AuthController extends GetxController {
   final RxMap<String, dynamic> _quizAnswers = <String, dynamic>{}.obs;
   final RxList<SurveyQuestionModel> _quizQuestionsCache =
       <SurveyQuestionModel>[].obs;
+  final RxString _ageVerificationError = ''.obs;
 
   // Getters
   firebase_auth.User? get user => _user.value;
@@ -99,6 +100,7 @@ class AuthController extends GetxController {
   bool get onboardingNotifications => _onboardingNotifications.value;
   bool get isOnboardingSubmitting => _isOnboardingSubmitting.value;
   bool get isUploadingPhoto => _isUploadingPhoto.value;
+  String get ageVerificationError => _ageVerificationError.value;
 
   @override
   void onInit() {
@@ -129,7 +131,7 @@ class AuthController extends GetxController {
     signupConfirmPasswordController.addListener(() {
       _signupConfirmPassword.value = signupConfirmPasswordController.text;
     });
-    
+
     // Onboarding form listeners
     onboardingFirstNameController.addListener(() {
       _onboardingFirstName.value = onboardingFirstNameController.text;
@@ -191,16 +193,6 @@ class AuthController extends GetxController {
         }
 
         await _prefsService.saveUser(profile);
-
-        // Check and save admin status
-        try {
-          final isAdmin = await _firebaseService.isAdmin(userId);
-          await _prefsService.setIsAdmin(isAdmin);
-          print('Admin status saved to prefs: $isAdmin');
-        } catch (e) {
-          print('Error saving admin status: $e');
-        }
-
         await _prefsService.setLoggedIn(true);
       }
     } catch (e) {
@@ -344,7 +336,7 @@ class AuthController extends GetxController {
 
       // Set flag to show verification UI on the same page
       _emailVerificationSent.value = true;
-      
+
       Get.snackbar(
         'Verification Email Sent',
         'Please check your email and click the verification link',
@@ -356,21 +348,25 @@ class AuthController extends GetxController {
     } catch (e) {
       // Handle specific Firebase errors
       final errorMessage = e.toString().toLowerCase();
-      
+
       if (errorMessage.contains('email-already-in-use')) {
         // Account exists - check if it's verified or not
-        print('⚠️ [SIGNUP] Email already in use, checking verification status...');
-        
+        print(
+          '⚠️ [SIGNUP] Email already in use, checking verification status...',
+        );
+
         try {
           // Try to sign in with the provided credentials
           await _firebaseService.signIn(email, password);
           await reloadUser();
-          
+
           // If we get here, credentials are correct
           if (!isEmailVerified) {
             // Account exists but not verified - help the user
-            print('📧 [SIGNUP] Account exists but not verified, resending email...');
-            
+            print(
+              '📧 [SIGNUP] Account exists but not verified, resending email...',
+            );
+
             Get.snackbar(
               'Account Found!',
               'We found your account. Sending a new verification email...',
@@ -379,19 +375,19 @@ class AuthController extends GetxController {
               colorText: Colors.white,
               duration: const Duration(seconds: 4),
             );
-            
+
             // Resend verification email
             await _firebaseService.sendEmailVerification();
-            
+
             // Navigate to EmailVerificationPage
             Get.offAllNamed(AppRoutes.emailVerification);
           } else {
             // Account exists and is already verified
             print('✅ [SIGNUP] Account exists and is verified');
-            
+
             // Sign out the user (they used signup form, not login)
             await _firebaseService.signOut();
-            
+
             Get.snackbar(
               'Account Already Exists',
               'This email is already registered. Please login instead.',
@@ -404,7 +400,7 @@ class AuthController extends GetxController {
         } catch (signInError) {
           // Password is wrong or other error
           print('❌ [SIGNUP] Sign-in failed: $signInError');
-          
+
           Get.snackbar(
             'Account Already Exists',
             'This email is already registered. If this is your account, please use the correct password or login.',
@@ -477,20 +473,8 @@ class AuthController extends GetxController {
           return;
         }
 
-        final userId = _user.value!.uid;
-        // Check and save admin status explicitly before redirect
-        final isAdmin = await _firebaseService.isAdmin(userId);
-        await _prefsService.setIsAdmin(isAdmin);
-        await _prefsService.setLoggedIn(
-          true,
-        ); // Ensure logged in state is saved
-
-        // Redirect based on role
-        if (isAdmin) {
-          Get.offAllNamed(AppRoutes.adminDashboard);
-        } else {
-          Get.offAllNamed(AppRoutes.main);
-        }
+        await _prefsService.setLoggedIn(true);
+        Get.offAllNamed(AppRoutes.main);
       }
     } catch (e) {
       Get.snackbar('Error', 'Invalid email or password');
@@ -529,16 +513,12 @@ class AuthController extends GetxController {
       await _saveQuizAnswersIfExists();
 
       if (_user.value != null) {
-        final userId = _user.value!.uid;
-        // Check and save admin status explicitly
-        final isAdmin = await _firebaseService.isAdmin(userId);
-        await _prefsService.setIsAdmin(isAdmin);
         await _prefsService.setLoggedIn(true);
       }
 
       // Check if profile is complete
       if (!isOnboardingComplete()) {
-        Get.offAllNamed(AppRoutes.onboarding);
+        await _navigateToOnboardingOrAccessCode();
       } else {
         Get.offAllNamed(AppRoutes.main);
       }
@@ -590,16 +570,12 @@ class AuthController extends GetxController {
       await _saveQuizAnswersIfExists();
 
       if (_user.value != null) {
-        final userId = _user.value!.uid;
-        // Check and save admin status explicitly
-        final isAdmin = await _firebaseService.isAdmin(userId);
-        await _prefsService.setIsAdmin(isAdmin);
         await _prefsService.setLoggedIn(true);
       }
 
       // Check if profile is complete
       if (!isOnboardingComplete()) {
-        Get.offAllNamed(AppRoutes.onboarding);
+        await _navigateToOnboardingOrAccessCode();
       } else {
         Get.offAllNamed(AppRoutes.main);
       }
@@ -647,22 +623,13 @@ class AuthController extends GetxController {
       await _saveQuizAnswersIfExists();
 
       if (_user.value != null) {
-        final userId = _user.value!.uid;
-        // Check and save admin status explicitly
-        final isAdmin = await _firebaseService.isAdmin(userId);
-        await _prefsService.setIsAdmin(isAdmin);
         await _prefsService.setLoggedIn(true);
 
         // Check if profile is complete
         if (!isOnboardingComplete()) {
-          Get.offAllNamed(AppRoutes.onboarding);
+          await _navigateToOnboardingOrAccessCode();
         } else {
-          // Redirect based on role
-          if (isAdmin) {
-            Get.offAllNamed(AppRoutes.adminDashboard);
-          } else {
-            Get.offAllNamed(AppRoutes.main);
-          }
+          Get.offAllNamed(AppRoutes.main);
         }
       }
     } catch (e) {
@@ -731,22 +698,13 @@ class AuthController extends GetxController {
       await _saveQuizAnswersIfExists();
 
       if (_user.value != null) {
-        final userId = _user.value!.uid;
-        // Check and save admin status explicitly
-        final isAdmin = await _firebaseService.isAdmin(userId);
-        await _prefsService.setIsAdmin(isAdmin);
         await _prefsService.setLoggedIn(true);
 
         // Check if profile is complete
         if (!isOnboardingComplete()) {
-          Get.offAllNamed(AppRoutes.onboarding);
+          await _navigateToOnboardingOrAccessCode();
         } else {
-          // Redirect based on role
-          if (isAdmin) {
-            Get.offAllNamed(AppRoutes.adminDashboard);
-          } else {
-            Get.offAllNamed(AppRoutes.main);
-          }
+          Get.offAllNamed(AppRoutes.main);
         }
       }
     } catch (e) {
@@ -797,25 +755,25 @@ class AuthController extends GetxController {
   Future<void> checkEmailVerification() async {
     try {
       _isCheckingVerification.value = true;
-      
+
       print('🔍 [VERIFY] Checking email verification status...');
       print('   - Current user: ${_user.value?.email}');
       print('   - Current verified status: ${_user.value?.emailVerified}');
-      
+
       // Reload user from Firebase to get latest verification status
       await _firebaseService.reloadUser();
-      
+
       // Get the fresh user object
       final currentUser = _firebaseService.currentUser;
-      
+
       print('   - After reload user: ${currentUser?.email}');
       print('   - After reload verified: ${currentUser?.emailVerified}');
-      
+
       // Update local user object
       _user.value = currentUser;
-      
+
       print('   - isEmailVerified getter: $isEmailVerified');
-      
+
       if (isEmailVerified) {
         print('✅ [VERIFY] Email is verified! Proceeding...');
         // Email is verified, proceed to next step
@@ -833,7 +791,7 @@ class AuthController extends GetxController {
     } catch (e) {
       print('❌ [VERIFY] Error checking email verification: $e');
       final errorMessage = e.toString().toLowerCase();
-      
+
       if (errorMessage.contains('network')) {
         Get.snackbar(
           'Network Error',
@@ -857,9 +815,10 @@ class AuthController extends GetxController {
     if (_lastResendTime != null) {
       final timeSinceLastResend = DateTime.now().difference(_lastResendTime!);
       const cooldownDuration = Duration(seconds: 60);
-      
+
       if (timeSinceLastResend < cooldownDuration) {
-        final remainingSeconds = cooldownDuration.inSeconds - timeSinceLastResend.inSeconds;
+        final remainingSeconds =
+            cooldownDuration.inSeconds - timeSinceLastResend.inSeconds;
         Get.snackbar(
           'Please Wait',
           'You can resend the email in $remainingSeconds seconds',
@@ -874,7 +833,7 @@ class AuthController extends GetxController {
     try {
       await _firebaseService.sendEmailVerification();
       _lastResendTime = DateTime.now();
-      
+
       // Start cooldown timer
       _resendCooldown.value = 60;
       Future.doWhile(() async {
@@ -885,7 +844,7 @@ class AuthController extends GetxController {
         }
         return false;
       });
-      
+
       Get.snackbar(
         'Email Sent',
         'Verification email has been sent successfully',
@@ -896,7 +855,7 @@ class AuthController extends GetxController {
     } catch (e) {
       print('Error resending verification email: $e');
       final errorMessage = e.toString().toLowerCase();
-      
+
       if (errorMessage.contains('too-many-requests')) {
         Get.snackbar(
           'Too Many Requests',
@@ -928,10 +887,10 @@ class AuthController extends GetxController {
       await _saveQuizAnswersIfExists();
 
       // Navigate based on onboarding status
-      if (!isOnboardingComplete()) {
-        Get.offAllNamed(AppRoutes.onboarding);
-      } else {
+      if (isOnboardingComplete()) {
         Get.offAllNamed(AppRoutes.main);
+      } else {
+        await _navigateToOnboardingOrAccessCode();
       }
     } catch (e) {
       print('Error proceeding after verification: $e');
@@ -939,6 +898,53 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Navigate to access code page if required, otherwise to onboarding.
+  /// New users must accept the Community Agreement first before phone number etc.
+  Future<void> _navigateToOnboardingOrAccessCode() async {
+    try {
+      // New users (incomplete onboarding) must accept Community Agreement first
+      final profile = _userProfile.value;
+      if (profile != null &&
+          !isOnboardingComplete() &&
+          profile.communityAgreementAccepted != true) {
+        Get.offAllNamed(AppRoutes.communityAgreement);
+        return;
+      }
+
+      final appSettings = Get.find<AppSettingsService>();
+      await appSettings.refreshSettings();
+      if (appSettings.alphacodeRequired) {
+        Get.offAllNamed(AppRoutes.accessCode);
+      } else if (appSettings.shouldShowQuiz()) {
+        Get.offAllNamed(AppRoutes.quiz);
+      } else {
+        Get.offAllNamed(AppRoutes.signup);
+      }
+    } catch (e) {
+      print('Error checking alphacode: $e');
+      Get.offAllNamed(AppRoutes.onboarding);
+    }
+  }
+
+  /// Called from Community Agreement page after user taps Continue.
+  /// Saves acceptance and then proceeds to access code / quiz / signup / onboarding.
+  Future<void> acceptCommunityAgreementAndContinue() async {
+    final user = _user.value;
+    if (user == null) return;
+    try {
+      _isLoading.value = true;
+      await _firebaseService.updateUserProfile(user.uid, {
+        'community_agreement_accepted': true,
+      });
+      await reloadUser();
+      await _navigateToOnboardingOrAccessCode();
+    } catch (e) {
+      print('Error saving community agreement: $e');
+      Get.snackbar('Error', 'Could not save. Please try again.');
+    } finally {
+      _isLoading.value = false;
+    }
+  }
 
   // Onboarding methods
   void setOnboardingCountryCode(CountryCode code) {
@@ -951,6 +957,32 @@ class AuthController extends GetxController {
 
   void setOnboardingBirthdate(DateTime? date) {
     _onboardingBirthdate.value = date;
+
+    // Clear previous error
+    _ageVerificationError.value = '';
+
+    // Validate age if date is selected
+    if (date != null) {
+      final age = _calculateAge(date);
+      if (age < 21) {
+        _ageVerificationError.value =
+            'You must be at least 21 years old to use Loam.';
+      }
+    }
+  }
+
+  /// Calculate age from birthdate
+  int _calculateAge(DateTime birthdate) {
+    final today = DateTime.now();
+    int age = today.year - birthdate.year;
+
+    // Check if birthday hasn't occurred yet this year
+    if (today.month < birthdate.month ||
+        (today.month == birthdate.month && today.day < birthdate.day)) {
+      age--;
+    }
+
+    return age;
   }
 
   void setOnboardingNotifications(bool value) {
@@ -983,7 +1015,9 @@ class AuthController extends GetxController {
       case 3:
         return _onboardingLastName.value.trim().isNotEmpty;
       case 4:
-        return _onboardingBirthdate.value != null;
+        // Check if birthdate is selected AND user is 21 or older
+        return _onboardingBirthdate.value != null &&
+            _ageVerificationError.value.isEmpty;
       case 5:
         return _onboardingGender.value.isNotEmpty;
       case 6:
@@ -1136,28 +1170,28 @@ class AuthController extends GetxController {
   /// Clears all signup and onboarding data after successful profile completion
   void clearSignupData() {
     print('🧹 [CLEANUP] Clearing all signup and onboarding data...');
-    
+
     // Clear signup form controllers
     signupEmailController.clear();
     signupPasswordController.clear();
     signupConfirmPasswordController.clear();
-    
+
     // Clear login form controllers
     loginEmailController.clear();
     loginPasswordController.clear();
-    
+
     // Reset email verification state
     _emailVerificationSent.value = false;
     _resendCooldown.value = 0;
     _lastResendTime = null;
-    
+
     // Reset onboarding state
     resetOnboarding();
-    
+
     // Clear quiz answers
     _quizAnswers.clear();
     _quizQuestionsCache.clear();
-    
+
     print('✅ [CLEANUP] All signup data cleared successfully');
   }
 
@@ -1168,7 +1202,7 @@ class AuthController extends GetxController {
   bool isOnboardingComplete() {
     final profile = _userProfile.value;
     if (profile == null) return false;
-   
+
     return profile.firstName != null &&
         profile.firstName!.isNotEmpty &&
         profile.phone != null &&

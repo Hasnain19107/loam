@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -144,14 +145,20 @@ class SignupPage extends StatelessWidget {
                       text: 'Terms of Service',
                       style: TextStyle(
                         color: AppColors.primary,
+                        decoration: TextDecoration.underline,
                       ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => Get.toNamed(AppRoutes.terms),
                     ),
                     const TextSpan(text: ' and '),
                     TextSpan(
                       text: 'Privacy Policy',
                       style: TextStyle(
                         color: AppColors.primary,
+                        decoration: TextDecoration.underline,
                       ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => Get.toNamed(AppRoutes.privacy),
                     ),
                   ],
                 ),

@@ -27,23 +27,21 @@ void main() async {
   // Initialize Auth Controller
   Get.put(AuthController(), permanent: true);
 
-  // Initialize App Settings Service (for app-wide settings like quiz onboarding)
-  Get.put(AppSettingsService(), permanent: true);
+  // Initialize App Settings Service (for app-wide settings like quiz onboarding, alphacode)
+  final appSettings = Get.put(AppSettingsService(), permanent: true);
+  await appSettings.initializeSettings();
 
   // Determine initial route
   String initialRoute = AppRoutes.landing;
   if (prefs.isLoggedIn) {
-     if (prefs.isAdmin) {
-       initialRoute = AppRoutes.adminDashboard;
-     } else {
-       // Check if profile is complete
-       final user = prefs.getUser();
-       if (isProfileComplete(user)) {
-         initialRoute = AppRoutes.main;
-       } else {
-         initialRoute = AppRoutes.onboarding;
-       }
-     }
+    final user = prefs.getUser();
+    if (isProfileComplete(user)) {
+      initialRoute = AppRoutes.main;
+    } else if (appSettings.alphacodeRequired) {
+      initialRoute = AppRoutes.accessCode;
+    } else {
+      initialRoute = AppRoutes.onboarding;
+    }
   }
 
   runApp(MyApp(initialRoute: initialRoute));
@@ -68,7 +66,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Loam Admin',
+      title: 'Loam',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: initialRoute,

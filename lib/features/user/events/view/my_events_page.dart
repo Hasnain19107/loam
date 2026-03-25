@@ -33,17 +33,19 @@ class MyEventsPage extends GetView<MyEventsController> {
               ),
             ),
 
-            // Tabs Container
+            // Tabs Container — show full-screen loading only when no data yet (initial load)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Obx(() {
-                  if (controller.isLoading) {
-                    return Center(
-                      child: Text(
-                        'Loading...',
-                        style: TextStyle(color: AppColors.mutedForeground),
-                      ),
+                  final hasData = controller.upcomingEvents.isNotEmpty ||
+                      controller.pastEvents.isNotEmpty;
+                  final isInitialLoad =
+                      controller.isLoading && !hasData;
+
+                  if (isInitialLoad) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
                     );
                   }
 
@@ -99,11 +101,13 @@ class MyEventsPage extends GetView<MyEventsController> {
                                 controller.upcomingEvents,
                                 'upcoming',
                                 context,
+                                onRefresh: () => controller.loadMyEvents(),
                               ),
                               _buildEventsList(
                                 controller.pastEvents,
                                 'past',
                                 context,
+                                onRefresh: () => controller.loadMyEvents(),
                               ),
                             ],
                           ),
@@ -123,31 +127,45 @@ class MyEventsPage extends GetView<MyEventsController> {
   Widget _buildEventsList(
     List<MyEventItem> items,
     String type,
-    BuildContext context,
-  ) {
+    BuildContext context, {
+    required Future<void> Function() onRefresh,
+  }) {
     if (items.isEmpty) {
-      return _buildEmptyState(type, context);
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height - 280,
+            child: Center(child: _buildEmptyState(type, context)),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.zero,
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final isPast = type == 'past';
-        return Padding(
-          padding: EdgeInsets.only(bottom: index < items.length - 1 ? 16 : 0),
-          child: _EventCard(
-            event: item.event,
-            status: item.status,
-            isPast: isPast,
-            onTap: () => Get.toNamed(
-              AppRoutes.eventDetail.replaceAll(':id', item.event.id),
-              parameters: {'source': 'my-gatherings'},
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isPast = type == 'past';
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < items.length - 1 ? 16 : 0),
+            child: _EventCard(
+              event: item.event,
+              status: item.status,
+              isPast: isPast,
+              onTap: () => Get.toNamed(
+                AppRoutes.eventDetail.replaceAll(':id', item.event.id),
+                parameters: {'source': 'my-gatherings'},
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -257,6 +275,13 @@ class _EventCard extends StatelessWidget {
     }
   }
 
+  /// True when location must be hidden until admin approves (same logic as event detail page).
+  bool _shouldHideLocation() {
+    return event.requiresApproval &&
+        event.hideLocationUntilApproved &&
+        status != AppConstants.participationStatusApproved;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Opacity(
@@ -335,7 +360,8 @@ class _EventCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (event.location != null) ...[
+                  // Show location only when approved (or when event doesn't hide until approved)
+                  ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -347,7 +373,9 @@ class _EventCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            event.location!,
+                            _shouldHideLocation()
+                                ? 'Location will be shown after approval'
+                                : (event.location ?? 'Location TBA'),
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.mutedForeground,

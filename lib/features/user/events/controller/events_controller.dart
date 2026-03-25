@@ -68,6 +68,16 @@ class EventsController extends GetxController {
     }
   }
 
+  /// Call this for pull-to-refresh; completes when loading has finished or after timeout.
+  Future<void> refresh() async {
+    loadEvents();
+    const maxWait = Duration(seconds: 10);
+    final deadline = DateTime.now().add(maxWait);
+    while (_isLoading.value && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
   List<EventModel> get upcomingEvents {
     final now = DateTime.now();
     return _events.where((event) {

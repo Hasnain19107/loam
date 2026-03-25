@@ -6,6 +6,7 @@ class EventModel {
   final String? description;
   final String? coverImageUrl;
   final String? location;
+  final String? contactNumber;
   final DateTime startDate;
   final DateTime? endDate;
   final int? capacity;
@@ -25,6 +26,7 @@ class EventModel {
     this.description,
     this.coverImageUrl,
     this.location,
+    this.contactNumber,
     required this.startDate,
     this.endDate,
     this.capacity,
@@ -46,6 +48,7 @@ class EventModel {
       description: json['description'] as String?,
       coverImageUrl: json['cover_image_url'] as String?,
       location: json['location'] as String?,
+      contactNumber: json['contact_number'] as String?,
       startDate: (json['start_date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       endDate: (json['end_date'] as Timestamp?)?.toDate(),
       capacity: json['capacity'] as int?,
@@ -68,6 +71,7 @@ class EventModel {
       'description': description,
       'cover_image_url': coverImageUrl,
       'location': location,
+      'contact_number': contactNumber,
       'start_date': Timestamp.fromDate(startDate),
       'end_date': endDate != null ? Timestamp.fromDate(endDate!) : null,
       'capacity': capacity,
@@ -101,6 +105,7 @@ class EventModel {
     String? description,
     String? coverImageUrl,
     String? location,
+    String? contactNumber,
     DateTime? startDate,
     DateTime? endDate,
     int? capacity,
@@ -120,6 +125,7 @@ class EventModel {
       description: description ?? this.description,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       location: location ?? this.location,
+      contactNumber: contactNumber ?? this.contactNumber,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       capacity: capacity ?? this.capacity,

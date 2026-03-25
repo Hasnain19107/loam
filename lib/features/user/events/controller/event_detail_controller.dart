@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../data/models/event_model.dart';
@@ -22,9 +24,11 @@ class EventDetailController extends GetxController {
   final RxBool _isSubmitting = false.obs;
   final RxBool _showConfirmation = false.obs;
   final RxInt _approvedCount = 0.obs; // Track actual approved participant count
+  final RxBool _hasReportedThisEvent = false.obs;
 
   // Getters
   EventModel? get event => _event.value;
+  bool get hasReportedThisEvent => _hasReportedThisEvent.value;
   List<UserProfileModel> get participants => _participants;
   EventParticipantModel? get participation => _participation.value;
   bool get isLoading => _isLoading.value;
@@ -97,8 +101,7 @@ class EventDetailController extends GetxController {
         }
 
         // Only load participants if permitted
-        if (event.showParticipants ||
-            await _firebaseService.isAdmin(_authController.user?.uid ?? '')) {
+        if (event.showParticipants) {
           await loadParticipants();
         }
 
@@ -109,6 +112,11 @@ class EventDetailController extends GetxController {
               _authController.user!.uid,
             );
             _participation.value = participation;
+            final reported = await _firebaseService.hasUserReportedEvent(
+              eventId,
+              _authController.user!.uid,
+            );
+            _hasReportedThisEvent.value = reported;
           } catch (_) {}
         }
       } else {
@@ -180,9 +188,11 @@ class EventDetailController extends GetxController {
     return 'Register';
   }
 
-  // Dialog state
+  // Report dialog state
   final RxBool _reportDialogOpen = false.obs;
+  final RxBool _isReportSubmitting = false.obs;
   bool get reportDialogOpen => _reportDialogOpen.value;
+  bool get isReportSubmitting => _isReportSubmitting.value;
 
   void openReportDialog() {
     _reportDialogOpen.value = true;
@@ -190,6 +200,36 @@ class EventDetailController extends GetxController {
 
   void closeReportDialog() {
     _reportDialogOpen.value = false;
+  }
+
+  /// Submit event report with reason to Firebase. Returns true on success (caller can close dialog).
+  Future<bool> submitReport(String reason) async {
+    if (eventId.isEmpty || eventId == ':id' || _authController.user == null) {
+      Get.snackbar('Error', 'You must be logged in to report an event');
+      return false;
+    }
+    if (_hasReportedThisEvent.value) {
+      Get.snackbar('Info', 'You have already reported this event.');
+      return false;
+    }
+
+    _isReportSubmitting.value = true;
+    try {
+      await _firebaseService.reportEvent(
+        eventId,
+        _authController.user!.uid,
+        reason,
+      );
+      _hasReportedThisEvent.value = true;
+      Get.back(); // Close report dialog immediately after success
+      Get.snackbar('Thank you', 'Our team will review this event.');
+      return true;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to submit report. Please try again.');
+      return false;
+    } finally {
+      _isReportSubmitting.value = false;
+    }
   }
 
   // Action methods
@@ -203,15 +243,46 @@ class EventDetailController extends GetxController {
     }
   }
 
-  void contactOrganizer() {
-    Get.snackbar('Info', 'Chat with organiser coming soon');
+  Future<void> contactOrganizer() async {
+    final raw = event?.contactNumber?.trim();
+    debugPrint('[Contact] event.contactNumber: "$raw"');
+    if (raw == null || raw.isEmpty) {
+      Get.snackbar('Info', 'No contact number set for this event');
+      return;
+    }
+    // Tel URI: strip spaces, dashes, parentheses; keep digits and +
+    final number = raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    if (number.isEmpty) {
+      Get.snackbar('Info', 'No valid contact number');
+      return;
+    }
+    final telUri = Uri.parse('tel:$number');
+    debugPrint('[Contact] launching tel URI: $telUri');
+    try {
+      bool launched = await launchUrl(
+        telUri,
+        mode: LaunchMode.externalApplication,
+      );
+      debugPrint('[Contact] launchUrl(externalApplication) = $launched');
+      if (!launched) {
+        launched = await launchUrl(telUri, mode: LaunchMode.platformDefault);
+        debugPrint('[Contact] launchUrl(platformDefault) = $launched');
+      }
+      if (!launched) {
+        Get.snackbar('Error', 'Could not open dial app. Check device settings.');
+      }
+    } catch (e, st) {
+      debugPrint('[Contact] error: $e');
+      debugPrint('[Contact] stack: $st');
+      Get.snackbar('Error', 'Could not open dial app: $e');
+    }
   }
 
   void openInBrowser() {
     Get.snackbar('Info', 'Opening in browser');
   }
 
-  void reportEvent() {
+  void openReportEventDialog() {
     openReportDialog();
   }
 

@@ -39,7 +39,7 @@ class ProfileController extends GetxController {
       );
 
       await _authController.reloadUser();
-      Get.snackbar('Success', 'Profile updated successfully');
+      // Success snackbar is shown by the caller (e.g. saveProfile) for better UX
     } catch (e) {
       _error.value = e.toString();
       Get.snackbar('Error', 'Failed to update profile: ${e.toString()}');
@@ -150,7 +150,7 @@ class ProfileController extends GetxController {
 
   Future<void> saveProfile() async {
     if (_isDisposed) return;
-    
+
     try {
       await updateProfile({
         'first_name': firstNameController.text.trim(),
@@ -161,12 +161,20 @@ class ProfileController extends GetxController {
         'work_industry': workIndustryController.text.trim(),
         'country_of_birth': countryOfBirthController.text.trim(),
       });
-      // Navigate to main navigation and set to profile tab (index 3, which is the 4th tab)
+      if (_isDisposed) return;
+      // Navigate back first so snackbar shows on the profile screen
       final navController = Get.find<MainNavigationController>();
       navController.changePage(3); // Profile tab is at index 3
       Get.offNamed(AppRoutes.main);
+      // Show confirmation on the profile tab so user always sees it
+      Get.snackbar(
+        'Saved',
+        'Your changes have been saved.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
     } catch (e) {
-      // Error handled in updateProfile
+      // Error snackbar already shown in updateProfile
     }
   }
 

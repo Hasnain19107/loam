@@ -106,36 +106,51 @@ class HomePage extends GetView<HomeController> {
               ),
             ),
 
-            // Events list
+            // Events list — show full-screen loading only when no data yet (initial load)
             Expanded(
               child: Obx(() {
-                if (eventsController.isLoading) {
+                final upcomingEvents = eventsController.upcomingEvents;
+                final isLoading = eventsController.isLoading;
+                final isInitialLoad = isLoading && upcomingEvents.isEmpty;
+
+                if (isInitialLoad) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final upcomingEvents = eventsController.upcomingEvents;
-
                 if (upcomingEvents.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No upcoming events',
-                      style: TextStyle(color: AppColors.mutedForeground),
+                  return RefreshIndicator(
+                    onRefresh: () async => await eventsController.refresh(),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height - 200,
+                        child: Center(
+                          child: Text(
+                            'No upcoming events',
+                            style: TextStyle(color: AppColors.mutedForeground),
+                          ),
+                        ),
+                      ),
                     ),
                   );
                 }
 
-                return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  children: [
-                    Text(
-                      'Upcoming gatherings',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                return RefreshIndicator(
+                  onRefresh: () async => await eventsController.refresh(),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      Text(
+                        'Upcoming gatherings',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ...upcomingEvents.map((event) => EventCard(event: event)),
-                  ],
+                      const SizedBox(height: 16),
+                      ...upcomingEvents.map((event) => EventCard(event: event)),
+                    ],
+                  ),
                 );
               }),
             ),

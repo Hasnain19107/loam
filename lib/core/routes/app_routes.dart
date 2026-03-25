@@ -7,7 +7,12 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String emailVerification = '/email-verification';
   static const String forgotPassword = '/forgot-password';
+  static const String accessCode = '/access-code';
   static const String onboarding = '/onboarding';
+  static const String terms = '/terms';
+  static const String privacy = '/privacy';
+  static const String communityGuidelines = '/community-guidelines';
+  static const String communityAgreement = '/community-agreement';
 
   // Protected Routes
   static const String main = '/main';
@@ -24,27 +29,6 @@ class AppRoutes {
   static const String settingsLanguage = '/settings/language';
   static const String settingsCity = '/settings/city';
   static const String blocked = '/blocked';
-
-  // Admin Routes
-  static const String adminLogin = '/admin/login';
-  static const String adminDashboard = '/admin';
-  static const String adminUsers = '/admin/users';
-  static const String adminEvents = '/admin/events';
-  static const String adminEventCreate = '/admin/events/new';
-  static const String adminEventDetail = '/admin/events/:id';
-  static const String adminEventEdit = '/admin/events/:id/edit';
-  static const String adminRequests = '/admin/requests';
-  static const String adminEventRequests = '/admin/events/:id/requests';
-  static const String adminSettings = '/admin/settings';
-  static const String adminQuizBuilder = '/admin/quiz-builder';
-  static const String adminQuizQuestions = '/admin/quiz-builder/:quizId';
-  static const String adminQuizResponses = '/admin/quiz-responses';
-  static const String adminMatchmakerBuilder = '/admin/matchmaker-builder';
-  static const String adminMatchmakerQuestions =
-      '/admin/matchmaker-builder/:setId';
-  static const String adminMatchmakerResponses = '/admin/matchmaker-responses';
-  static const String adminMatchmaking = '/admin/matchmaking';
-  static const String adminMatchmakingDetail = '/admin/matchmaking/:userId';
 
   // Fallback
   static const String notFound = '/not-found';

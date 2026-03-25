@@ -20,12 +20,13 @@ class EditProfilePage extends GetView<ProfileController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-              child: Row(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
@@ -106,18 +107,19 @@ class EditProfilePage extends GetView<ProfileController> {
                   ],
                 ),
               ),
-            ),
+              ),
 
-            // Form
-            Expanded(
-              child: ListView(
+              // Form
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  // First name
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Name
                   _FormField(
-                    label: 'First name',
+                    label: 'Name',
                     controller: controller.firstNameController,
-                    placeholder: 'Your first name',
+                    placeholder: 'Your name',
                   ),
                   const SizedBox(height: 24),
 
@@ -388,10 +390,11 @@ class EditProfilePage extends GetView<ProfileController> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

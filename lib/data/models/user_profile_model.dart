@@ -19,6 +19,7 @@ class UserProfileModel {
   final String? city;
   final bool isShadowBlocked;
   final String? adminNotes;
+  final bool? communityAgreementAccepted;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -41,6 +42,7 @@ class UserProfileModel {
     this.city,
     this.isShadowBlocked = false,
     this.adminNotes,
+    this.communityAgreementAccepted,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -65,6 +67,7 @@ class UserProfileModel {
       city: json['city'] as String?,
       isShadowBlocked: json['is_shadow_blocked'] as bool? ?? false,
       adminNotes: json['admin_notes'] as String?,
+      communityAgreementAccepted: json['community_agreement_accepted'] as bool?,
       createdAt: (json['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (json['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -90,6 +93,7 @@ class UserProfileModel {
       'city': city,
       'is_shadow_blocked': isShadowBlocked,
       'admin_notes': adminNotes,
+      'community_agreement_accepted': communityAgreementAccepted,
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
     };
@@ -114,6 +118,7 @@ class UserProfileModel {
     String? city,
     bool? isShadowBlocked,
     String? adminNotes,
+    bool? communityAgreementAccepted,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -136,6 +141,8 @@ class UserProfileModel {
       city: city ?? this.city,
       isShadowBlocked: isShadowBlocked ?? this.isShadowBlocked,
       adminNotes: adminNotes ?? this.adminNotes,
+      communityAgreementAccepted:
+          communityAgreementAccepted ?? this.communityAgreementAccepted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
@@ -13,6 +14,7 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   late AppSettingsService _settingsService;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -27,13 +29,24 @@ class _LandingPageState extends State<LandingPage> {
     _settingsService.initializeSettings();
   }
 
-  void _handleGetStarted() {
-    // Check if quiz onboarding is enabled
-    if (_settingsService.shouldShowQuiz()) {
-      Get.toNamed(AppRoutes.quiz);
-    } else {
-      // Skip quiz and go straight to signup
-      Get.toNamed(AppRoutes.signup);
+  Future<void> _handleGetStarted() async {
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
+    try {
+      await _settingsService.refreshSettings();
+      if (!mounted) return;
+      if (_settingsService.alphacodeRequired) {
+        Get.toNamed(AppRoutes.accessCode);
+      } else if (_settingsService.shouldShowQuiz()) {
+        Get.toNamed(AppRoutes.quiz);
+      } else {
+        Get.toNamed(AppRoutes.signup);
+      }
+    } catch (e) {
+      print('Error checking alphacode: $e');
+      if (mounted) Get.toNamed(AppRoutes.signup);
+    } finally {
+      if (mounted) setState(() => _isNavigating = false);
     }
   }
 
@@ -43,7 +56,7 @@ class _LandingPageState extends State<LandingPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/landing-hero.jpg'),
+            image: AssetImage('assets/landing-hero.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -85,13 +98,13 @@ class _LandingPageState extends State<LandingPage> {
                   Obx(() => SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _settingsService.isLoading
+                          onPressed: _settingsService.isLoading || _isNavigating
                               ? null
                               : _handleGetStarted,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: _settingsService.isLoading
+                          child: _settingsService.isLoading || _isNavigating
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
@@ -120,13 +133,7 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                   const SizedBox(height: 24),
                   Center(
-                    child: Text(
-                      'By signing up, you agree to the Terms of Service, Privacy Policy and Community Guidelines.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.6),
-                          ),
-                    ),
+                    child: _LegalFooter(),
                   ),
                 ],
               ),
@@ -138,3 +145,45 @@ class _LandingPageState extends State<LandingPage> {
   }
 }
 
+class _LegalFooter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final baseStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Colors.white.withOpacity(0.6),
+        );
+    final linkStyle = baseStyle?.copyWith(
+      color: Colors.white.withOpacity(0.9),
+      decoration: TextDecoration.underline,
+    );
+    return Text.rich(
+      textAlign: TextAlign.center,
+      TextSpan(
+        style: baseStyle,
+        text: 'By signing up, you agree to the ',
+        children: [
+          TextSpan(
+            text: 'Terms of Service',
+            style: linkStyle,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => Get.toNamed(AppRoutes.terms),
+          ),
+          const TextSpan(text: ', '),
+          TextSpan(
+            text: 'Privacy Policy',
+            style: linkStyle,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => Get.toNamed(AppRoutes.privacy),
+          ),
+          const TextSpan(text: ' and '),
+          TextSpan(
+            text: 'Community Guidelines',
+            style: linkStyle,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => Get.toNamed(AppRoutes.communityGuidelines),
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+    );
+  }
+}
